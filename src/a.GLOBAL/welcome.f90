@@ -63,8 +63,6 @@
 
 ! Procedure
 ! ===========================================================================
-
-
         write (ilogfile,'(4x,A)')
         write (ilogfile,'(4x,A)') '                   James P. Lewis '
         write (ilogfile,'(4x,A)') '                Department of Physics '
