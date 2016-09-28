@@ -324,38 +324,32 @@
              
                 ! Rotate into crystal coordinates
                 call rotate (in1, in2, eps, norb_mu, norb_nu, bcxcm, bcxcx)
-                do ix = 1, 3
 
 ! The first piece will be the force with respect to atom 3.
-                 if (x .gt. 1.0d-5) then
-                  amt(ix) = (sighat(ix) - cost*rhat(ix))/x
-                 else
+                if (x .gt. 1.0d-5) then
+                  amt = (sighat - cost*rhat)/x
+                else
                   amt = 0.0d0
-                 end if
-
-                 bmt(:) = (cost*sighat(:) - rhat(:))/z
-
-                 pFdata_bundle => Fdata_bundle_3c(in1, in2, in3)
-                 pFdata_cell =>                                               &
-     &             pFdata_bundle%Fdata_cell_3c(pFdata_bundle%index_3c(P_rho_3c,isubtype,1))
-
-                 do iindex = 1, pFdata_cell%nME
-                   imu = pFdata_cell%mu_3c(iindex)
-                   inu = pFdata_cell%nu_3c(iindex)
-
-! Now recover f3naMa which is a two-dimensional array
-                   vdxcMa(ix,imu,inu) = rhat(ix)*dxbcxcm(imu,inu)            &
-     &                                 + amt(ix)*dpbcxcm(imu,inu)
+                end if
 
 ! The second piece will be the force with respect to atom 1.
-                   bmt(ix) = (cost*sighat(ix) - rhat(ix))/z
+                bmt = (cost*sighat - rhat)/z
+
+                pFdata_bundle => Fdata_bundle_3c(in1, in2, in3)
+                pFdata_cell =>                                               &
+     &            pFdata_bundle%Fdata_cell_3c(pFdata_bundle%index_3c(P_rho_3c,isubtype,1))
+
+                do iindex = 1, pFdata_cell%nME
+                  imu = pFdata_cell%mu_3c(iindex)
+                  inu = pFdata_cell%nu_3c(iindex)
+
+! Now recover f3naMa which is a two-dimensional array
+                  vdxcMa(:,imu,inu) = rhat*dxbcxcm(imu,inu) + amt*dpbcxcm(imu,inu)
 
 ! Now recover f3naMb which is a two-dimensional array
-                   vdxcMb(ix,imu,inu) = - sighat(ix)*dybcxcm(imu, inu)       &
-     &                                   + bmt(ix)*dpbcxcm(imu, inu)         &
-     &                                   - vdxcMa(ix,imu,inu)/2.0d0
+                  vdxcMb(:,imu,inu) = - sighat*dybcxcm(imu,inu)              &
+     &             + bmt*dpbcxcm(imu, inu) - vdxcMa(:,imu,inu)/2.0d0
                  end do ! iindex
-                end do ! ix
                
 ! ***************************************************************************
 ! Convert to Crystal Coordinates
