@@ -318,7 +318,6 @@
                 dxbcxcm = 0.0d0; dybcxcm = 0.0d0;
                 vdxcMa = 0.0d0; vdxcMb = 0.0d0;
                 vdxcXa = 0.0d0; vdxcXb = 0.0d0; vdxcXc = 0.0d0
-                                
                 call getDMEs_Fdata_3c (in1, in2, in3, P_rho_3c, isubtype, x, &
      &                                 z, norb_mu, norb_nu, cost, rhat,      &
      &                                 sighat, bcxcm, dpbcxcm, dxbcxcm, dybcxcm)
@@ -413,7 +412,6 @@
                                 
                 bcxcm = 0.0d0; dpbcxcm = 0.0d0
                 dxbcxcm = 0.0d0; dybcxcm = 0.0d0
-
                 call getDMEs_Fdata_3c (in1, in2, in3, P_rhoS_3c, isubtype, x,&
      &                                 z, nssh_i, nssh_j, cost, rhat, sighat,&
      &                                 bcxcm, dpbcxcm, dxbcxcm, dybcxcm)
@@ -486,7 +484,7 @@
               end do ! issh = 1, species(in1)%nss
               
               do inu =1, norb_nu
-                do imu=1, norb_mu
+                do imu =1, norb_mu
                   pfalpha%f3xca = pfalpha%f3xca + pRho_neighbors%block(imu,inu)*mxca(:,imu,inu)
                   pfi%f3xcb = pfi%f3xcb + pRho_neighbors%block(imu,inu)*mxcb(:,imu,inu)
                   pfj%f3xcc = pfj%f3xcc + pRho_neighbors%block(imu,inu)*mxcc(:,imu,inu)
