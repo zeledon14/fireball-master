@@ -109,12 +109,13 @@
         integer in1, in2, in3            !< species numbers
         integer isubtype                 !< which subtype
         integer interaction, isorp       !< which interaction and subtype
-        integer ix, iindex
+        integer iindex
         integer nssh_i, nssh_j           !< size of the block for the pair
         integer issh, jssh               !< counter over shells
         integer norb_mu, norb_nu         !< size of the block for the pair
         integer imu, inu
         integer n1, n2, l1, l2, m1, m2     !< quantum numbers n, l, and m
+
         real dexc_in                       !< 1st derivative of xc
         real d2exc_in                      !< 2nd derivativive of xc
         real dmuxc_in                      !< 1st derivative of xc
