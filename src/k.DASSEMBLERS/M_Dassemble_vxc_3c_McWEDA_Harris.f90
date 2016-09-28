@@ -411,8 +411,8 @@
               do isubtype = 1, species(in3)%nssh
                 Qneutral = species(in3)%shell(isubtype)%Qneutral
                                 
-                bcxcm= 0.0d0; dpbcxcm= 0.0d0
-                dxbcxcm= 0.0d0; dybcxcm= 0.0d0
+                bcxcm = 0.0d0; dpbcxcm = 0.0d0
+                dxbcxcm = 0.0d0; dybcxcm = 0.0d0
 
                 call getDMEs_Fdata_3c (in1, in2, in3, P_rhoS_3c, isubtype, x,&
      &                                 z, nssh_i, nssh_j, cost, rhat, sighat,&
@@ -487,7 +487,7 @@
               
               do inu =1, norb_nu
                 do imu=1, norb_mu
-                  pfalpha%f3xca= pfalpha%f3xca + pRho_neighbors%block(imu,inu)*mxca(:,imu,inu)
+                  pfalpha%f3xca = pfalpha%f3xca + pRho_neighbors%block(imu,inu)*mxca(:,imu,inu)
                   pfi%f3xcb = pfi%f3xcb + pRho_neighbors%block(imu,inu)*mxcb(:,imu,inu)
                   pfj%f3xcc = pfj%f3xcc + pRho_neighbors%block(imu,inu)*mxcc(:,imu,inu)
                 end do !imu , norb_mu
