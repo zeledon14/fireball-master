@@ -142,30 +142,26 @@
 
 ! (3) Sum all three contributions :
         do iatom = 1, s%natoms
-          matom = s%neigh_self(iatom)
-
-          in1 = s%atom(iatom)%imass
-          norb_mu = species(in1)%norb_max
-
           ! cut some lengthy notation
           pvxc=>s%vxc(iatom)
-
+          in1 = s%atom(iatom)%imass
+          norb_mu = species(in1)%norb_max
+          num_neigh = s%neighbors(iatom)%neighn
+          matom = s%neigh_self(iatom)
           pvxc_neighbors_self=>pvxc%neighbors(matom)
 ! Loop over the neighbors of each iatom.
-          num_neigh = s%neighbors(iatom)%neighn
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
+            ! cut some more lengthy notation
+            pvxc_neighbors=>pvxc%neighbors(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             in2 = s%atom(jatom)%imass
             norb_nu = species(in2)%norb_max
-
-            ! cut some more lengthy notation
-            pvxc_neighbors=>pvxc%neighbors(ineigh)
             allocate (pvxc_neighbors%Dblock(3,norb_mu, norb_nu))
             allocate (pvxc_neighbors_self%Dblocko(3,norb_mu, norb_mu))
 
 ! additions of the terms
-            pvxc_neighbors%Dblock = vxc_SN(iatom)%neighbors(ineigh)%Dblock -   &
-     &             vxc_SN_bond(iatom)%neighbors(ineigh)%Dblock +               &
+            pvxc_neighbors%Dblock = vxc_SN(iatom)%neighbors(ineigh)%Dblock  -   &
+     &             vxc_SN_bond(iatom)%neighbors(ineigh)%Dblock  +               &
      &             vxc_bond(iatom)%neighbors(ineigh)%Dblock
 
             pvxc_neighbors_self%Dblocko = vxc_SN(iatom)%neighbors(matom)%Dblocko    &
@@ -288,27 +284,25 @@
 ! ***************************************************************************
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
-          in1 = s%atom(iatom)%imass
-          r1 = s%atom(iatom)%ratom
-          norb_mu = species(in1)%norb_max
-
           ! cut some lengthy notation
           pvxc_SN=>vxc_SN(iatom)
           pvxc_SN_bond=>vxc_SN_bond(iatom)
+          in1 = s%atom(iatom)%imass
+          matom = s%neigh_self(iatom) !**
+          r1 = s%atom(iatom)%ratom !**
+          norb_mu = species(in1)%norb_max
+          num_neigh = s%neighbors(iatom)%neighn
 
 ! Loop over the neighbors of each iatom.
-          num_neigh = s%neighbors(iatom)%neighn
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
+            ! cut some more lengthy notation
+            pvxc_SN_neighbors=>pvxc_SN%neighbors(ineigh) !** matom sefl
+            pvxc_SN_bond_neighbors=>pvxc_SN_bond%neighbors(ineigh)
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
             norb_nu = species(in2)%norb_max
-
-            ! cut some more lengthy notation
-            pvxc_SN_neighbors=>pvxc_SN%neighbors(ineigh)
-            pvxc_SN_bond_neighbors=>pvxc_SN_bond%neighbors(ineigh)
-
             allocate (pvxc_SN_neighbors%Dblock(3,norb_mu, norb_nu))
             allocate (pvxc_SN_bond_neighbors%Dblock(3,norb_mu, norb_nu))
             pvxc_SN_neighbors%Dblock= 0.0d0
@@ -370,8 +364,8 @@
      &                   s%rho_bond(iatom)%neighbors(ineigh)%Dblock(:,imu,inu)
 
                        ! This is the SNXC 2 center part
-                       pvxc_SN_neighbors%Dblock(:,imu,inu) =                   &                        
-     &                  muxc_in*Dpoverlap + dmuxc_in*poverlap                  &
+                       pvxc_SN_neighbors%Dblock(:,imu,inu) =               &                        
+     &                  muxc_in*Dpoverlap + dmuxc_in*poverlap*Dprho_in_shell      &
      &                  + d2muxc_in*Dprho_in_shell*(prho_in - prho_in_shell*poverlap) & 
      &                  + dmuxc_in*(Dprho_in - Dprho_in_shell*poverlap         &
      &                  - prho_in_shell*Dpoverlap)
@@ -397,15 +391,17 @@
 ! ***************************************************************************
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
+          ! cut some lengthy notation
+          pvxc_SN=>vxc_SN(iatom)
+          pvxc_SN_bond=>vxc_SN_bond(iatom)
           matom = s%neigh_self(iatom)
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
+          num_neigh = s%neighbors(iatom)%neighn
 
           ! cut some more lengthy notation
-          pvxc_SN=>vxc_SN(iatom); pvxc_SN_neighbors=>pvxc_SN%neighbors(matom)
-          pvxc_SN_bond=>vxc_SN_bond(iatom)
+          pvxc_SN_neighbors=>pvxc_SN%neighbors(matom)
           pvxc_SN_bond_neighbors=>pvxc_SN_bond%neighbors(matom)
-
           norb_nu = species(in1)%norb_max
           allocate (pvxc_SN_neighbors%Dblocko(3,norb_mu, norb_nu))
           allocate (pvxc_SN_bond_neighbors%Dblocko(3,norb_mu, norb_nu))
@@ -605,24 +601,22 @@
 ! ===========================================================================
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
+          ! cut some lengthy notation
+          pvxc_bond=>vxc_bond(iatom)
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
-
-          ! cut some lengthy notation
-          pvxc_bond=>vxc_bond(iatom)
-
-! Loop over the neighbors of each iatom.
           num_neigh = s%neighbors(iatom)%neighn
           allocate (pvxc_bond%neighbors(num_neigh))
+
+! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
+            ! cut some more lengthy notation
+            pvxc_bond_neighbors=>pvxc_bond%neighbors(ineigh)
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
-
-            ! cut some more lengthy notation
-            pvxc_bond_neighbors=>pvxc_bond%neighbors(ineigh)
 
 ! Allocate block size
             norb_nu = species(in2)%norb_max
