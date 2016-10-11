@@ -176,7 +176,6 @@
         d2exc = d2exc*P_Hartree*(P_abohr)**6
         dmuxc = dmuxc*P_Hartree*(P_abohr)**3
         d2muxc = d2muxc*P_Hartree*(P_abohr)**6
-        if (rh .le. 0.035) d2muxc= 0.0d0; dmuxc= 0.0d0
 
 ! Deallocate Arrays
 ! ===========================================================================

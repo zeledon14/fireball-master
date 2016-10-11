@@ -910,10 +910,11 @@
         do iatom = 1, s%natoms
           do ineigh = 1, s%neighbors(iatom)%neighn
             deallocate (s%overlap(iatom)%neighbors(ineigh)%Dblock)
-            deallocate (s%kinetic(iatom)%neighbors(ineigh)%Dblock)
-            deallocate (s%vna(iatom)%neighbors(ineigh)%Dblock)
+            deallocate (s%kinetic(iatom)%neighbors(ineigh)%Dblocko)
             deallocate (s%vna(iatom)%neighbors(ineigh)%Dblocko)
           end do
+          matom = s%neigh_self(iatom)
+          deallocate (s%vna(iatom)%neighbors(ineigh)%Dblock)
         end do
 
 ! Deallocate Arrays

@@ -114,7 +114,8 @@
         integer issh, jssh               !< counter over shells
         integer norb_mu, norb_nu         !< size of the block for the pair
         integer imu, inu
-        integer n1, n2, l1, l2, m1, m2     !< quantum numbers n, l, and m
+        integer n1, n2, l1, l2, m1, m2   !< quantum numbers n, l, and m
+
         real dexc_in                       !< 1st derivative of xc
         real d2exc_in                      !< 2nd derivativive of xc
         real dmuxc_in                      !< 1st derivative of xc
@@ -126,7 +127,6 @@
         real Qin                    !< charge
         real z                           !< distances between r1 and r2
         real x, cost                     !< dnabc and angle
-        real rho_aver
 
         real, dimension (3, 3) :: eps     !< the epsilon matrix
         real, dimension (3, 3, 3) :: deps !< derivative of epsilon matrix
@@ -154,38 +154,38 @@
         real, dimension (:, :), allocatable :: dxbcxcm
         real, dimension (:, :), allocatable :: dybcxcm
 
-
-        
         real, dimension (:, :, :), allocatable :: vdxcMa
         real, dimension (:, :, :), allocatable :: vdxcMb
         real, dimension (:, :, :), allocatable :: vdxcXa
         real, dimension (:, :, :), allocatable :: vdxcXb
         real, dimension (:, :, :), allocatable :: vdxcXc
+
+        ! Derivative of rho in crystal coordinates
+        real, dimension (:, :, :), allocatable :: rhoxa ! derivative respect to a
+        real, dimension (:, :, :), allocatable :: rhoxb ! derivative respect to b
+        real, dimension (:, :, :), allocatable :: rhoxc ! derivative respect to c
         
-        real, dimension (:, :, :), allocatable :: rhoxa !rho crystal coord, deriv respect to a
-        real, dimension (:, :, :), allocatable :: rhoxb !rho crystal coord, deriv respect to b
-        real, dimension (:, :, :), allocatable :: rhoxc !rho crystal coord, deriv respect to c
+        real, dimension (:, :, :), allocatable :: mxca
+        real, dimension (:, : ,:), allocatable :: mxcb
+        real, dimension (:, :, :), allocatable :: mxcc
+
+        ! Derivative of rho in molecular coordinates and weighted over shells
+        real, dimension (:, :, :), allocatable :: rhoma_shell ! derivative respect to a
+        real, dimension (:, :, :), allocatable :: rhomb_shell ! derivative respect to b
+        real, dimension (:, :, :), allocatable :: rhomc_shell ! derivative respect to c
+
+
 
         real, dimension (:, :), allocatable :: bcxcm_shell
         real, dimension (:, :), allocatable :: bcxcx_shell
         real, dimension (:, :), allocatable :: dpbcxcm_shell
         real, dimension (:, :), allocatable :: dxbcxcm_shell
         real, dimension (:, :), allocatable :: dybcxcm_shell
-        
-        real, dimension (:, :, :), allocatable :: mxca
-        real, dimension (:, : ,:), allocatable :: mxcb
-        real, dimension (:, :, :), allocatable :: mxcc
 
         real, dimension (:, :, :), allocatable :: vdxcMa_shell
         real, dimension (:, :, :), allocatable :: vdxcMb_shell
         real, dimension (:, :, :), allocatable :: vdxcMc_shell
 
-        real, dimension (:, :, :), allocatable :: rhoma_shell !rho molecular coord, deriv respect to a
-        ! and weighted over the shells
-        real, dimension (:, :, :), allocatable :: rhomb_shell !rho molecular coord, deriv respect to b
-        ! and weighted over the shells
-        real, dimension (:, :, :), allocatable :: rhomc_shell !rho molecular coord, deriv respect to c
-        ! and weighted over the shells
 
         type(T_Fdata_cell_3c), pointer :: pFdata_cell
         type(T_Fdata_bundle_3c), pointer :: pFdata_bundle
@@ -225,7 +225,7 @@
           in3 = s%atom(ialpha)%imass
           r3 = s%atom(ialpha)%ratom
           pfalpha=>s%forces(ialpha)
-          rho_aver= 0.0d0
+
           ! loop over the common neighbor pairs of ialpha
           do ineigh = 1, s%neighbors(ialpha)%ncommon
             mneigh = s%neighbors(ialpha)%neigh_common(ineigh)
@@ -255,7 +255,6 @@
 
               pdenmat=>s%denmat(iatom)
               pRho_neighbors=>pdenmat%neighbors(mneigh) ! rho_3c
-
 
 ! SET-UP STUFF
 ! ***************************************************************************
@@ -332,22 +331,14 @@
               do isubtype = 1, species(in3)%nssh
                 Qin = species(in3)%shell(isubtype)%Qin
                 
-                bcxcm= 0.0d0; dpbcxcm= 0.0d0;
-                dxbcxcm= 0.0d0; dybcxcm= 0.0d0;
+                bcxcm = 0.0d0; dpbcxcm = 0.0d0;
+                dxbcxcm = 0.0d0; dybcxcm = 0.0d0;
                 vdxcMa = 0.0d0; vdxcMb = 0.0d0;
                 vdxcXa = 0.0d0; vdxcXb = 0.0d0; vdxcXc = 0.0d0
 
-                !bcxcm_shell= 0.0d0; dpbcxcm_shell= 0.0d0;
-                !dxbcxcm_shell= 0.0d0; dybcxcm_shell= 0.0d0;
-                !vdxcMa_weig = 0.0d0; vdxcMb_weig = 0.0d0;
-                !vdxcXa_weig = 0.0d0; vdxcXb_weig = 0.0d0; vdxcXc_weig = 0.0d0
                 call getDMEs_Fdata_3c (in1, in2, in3, P_rho_3c, isubtype, x, &
      &                                 z, norb_mu, norb_nu, cost, rhat,      &
      &                                 sighat, bcxcm, dpbcxcm, dxbcxcm, dybcxcm)
-             
-!                call getDMEs_Fdata_3c (in1, in2, in3, P_rhoS_3c, isubtype, x,&
-!     &                                 z, nssh_i, nssh_j, cost, rhat, sighat,&
-!     &                                 bcxcm_shell, dpbcxcm_shell, dxbcxcm_shell, dybcxcm_shell)
 
                 ! Rotate into crystal coordinates
                 call rotate (in1, in2, eps, norb_mu, norb_nu, bcxcm, bcxcx)
@@ -384,8 +375,7 @@
                  end do ! iindex
                 end do ! ix
                 
-!shell part                 
-                
+! shell part
                 dpbcxcm= 0.0d0; dxbcxcm= 0.0d0; dybcxcm= 0.0d0;
                 call getDMEs_Fdata_3c (in1, in2, in3, P_rhoS_3c, isubtype, x,&
      &                                 z, nssh_i, nssh_j, cost, rhat, sighat,&

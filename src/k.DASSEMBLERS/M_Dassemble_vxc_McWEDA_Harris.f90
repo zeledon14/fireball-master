@@ -137,6 +137,7 @@
 ! Calculate the derivativies of the matrix elements
         ! this term has the 2 center SNXC part and the OLSXC part too
         call Dassemble_vxc_SN (s)
+
         ! this term has the d(<mu_i|vxc(rho_ij)|nu_j>)/dR part
         call Dassemble_vxc_bond (s)
 
@@ -147,8 +148,6 @@
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
           num_neigh = s%neighbors(iatom)%neighn
-          matom = s%neigh_self(iatom)
-          pvxc_neighbors_self=>pvxc%neighbors(matom)
 
 ! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
@@ -161,13 +160,18 @@
             allocate (pvxc_neighbors_self%Dblocko(3,norb_mu, norb_mu))
 
 ! additions of the terms
-            pvxc_neighbors%Dblock = vxc_SN(iatom)%neighbors(ineigh)%Dblock  -   &
-     &             vxc_SN_bond(iatom)%neighbors(ineigh)%Dblock  +               &
-     &             vxc_bond(iatom)%neighbors(ineigh)%Dblock
+            pvxc_neighbors%Dblocko = vxc_SN(iatom)%neighbors(ineigh)%Dblocko    &
+     &                              - vxc_SN_bond(iatom)%neighbors(ineigh)%Dblocko&
+     &                              + vxc_bond(iatom)%neighbors(ineigh)%Dblocko
 
-            pvxc_neighbors_self%Dblocko = vxc_SN(iatom)%neighbors(matom)%Dblocko    &
-     &                              - vxc_SN_bond(iatom)%neighbors(matom)%Dblocko
+
           end do ! loop over neighbors
+          matom = s%neigh_self(iatom)
+          
+          ! cut some lengthy notation
+          pvxc_neighbors=>pvxc%neighbors(matom)          
+          pvxc_neighbors%Dblock = vxc_SN(iatom)%neighbors(matom)%Dblock         &
+     &                            - vxc_SN_bond(iatom)%neighbors(matom)%Dblock      
         end do ! loop over atoms
 
 ! Deallocate Arrays
@@ -297,17 +301,17 @@
 ! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
             ! cut some more lengthy notation
-            pvxc_SN_neighbors=>pvxc_SN%neighbors(ineigh) !** matom sefl
+            pvxc_SN_neighbors=>pvxc_SN%neighbors(ineigh) 
             pvxc_SN_bond_neighbors=>pvxc_SN_bond%neighbors(ineigh)
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
             norb_nu = species(in2)%norb_max
-            allocate (pvxc_SN_neighbors%Dblock(3,norb_mu, norb_nu))
-            allocate (pvxc_SN_bond_neighbors%Dblock(3,norb_mu, norb_nu))
-            pvxc_SN_neighbors%Dblock= 0.0d0
-            pvxc_SN_bond_neighbors%Dblock= 0.0d0
+            allocate (pvxc_SN_neighbors%Dblocko(3,norb_mu, norb_nu))
+            allocate (pvxc_SN_bond_neighbors%Dblocko(3,norb_mu, norb_nu))
+            pvxc_SN_neighbors%Dblocko = 0.0d0
+            pvxc_SN_bond_neighbors%Dblocko = 0.0d0
 
 ! If r1 .eq. r2, then this is a case of a seslf-interaction or "on-site" term;
 ! therefore, we do not calculate here.
@@ -365,18 +369,17 @@
      &                   s%rho_bond(iatom)%neighbors(ineigh)%Dblock(:,imu,inu)
 
                        ! This is the SNXC 2 center part
-                       pvxc_SN_neighbors%Dblock(:,imu,inu) =               &                        
-     &                  muxc_in*Dpoverlap + dmuxc_in*poverlap*Dprho_in_shell      &
+                       pvxc_SN_neighbors%Dblocko(:,imu,inu) =                &                        
+     &                  muxc_in*Dpoverlap + dmuxc_in*poverlap*Dprho_in_shell &
      &                  + d2muxc_in*Dprho_in_shell*(prho_in - prho_in_shell*poverlap) & 
-     &                  + dmuxc_in*(Dprho_in - Dprho_in_shell*poverlap         &
+     &                  + dmuxc_in*(Dprho_in - Dprho_in_shell*poverlap       &
      &                  - prho_in_shell*Dpoverlap)
                                       
-                       pvxc_SN_bond_neighbors%Dblock(:,imu,inu) =              &
-     &                  muxc_bond*Dpoverlap + dmuxc_bond*poverlap                  &
+                       pvxc_SN_bond_neighbors%Dblocko(:,imu,inu) =           &
+     &                  muxc_bond*Dpoverlap + dmuxc_bond*poverlap            &
      &                  + d2muxc_bond*Dprho_bond_shell*(prho_bond - prho_bond_shell*poverlap) & 
-     &                  + dmuxc_bond*(Dprho_bond - Dprho_bond_shell*poverlap         &
+     &                  + dmuxc_bond*(Dprho_bond - Dprho_bond_shell*poverlap &
      &                  - prho_bond_shell*Dpoverlap)
-
                      end do !** m2 = -l2, l2
                    end do !** m1 = -l1, l1
                 end do !** jssh = 1, species(in2)%nssh
@@ -392,22 +395,20 @@
 ! ***************************************************************************
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
-          ! cut some lengthy notation
-          pvxc_SN=>vxc_SN(iatom)
-          pvxc_SN_bond=>vxc_SN_bond(iatom)
           matom = s%neigh_self(iatom)
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
-          num_neigh = s%neighbors(iatom)%neighn
 
-          ! cut some more lengthy notation
+          ! cut some lengthy notation
+          pvxc_SN=>vxc_SN(iatom)
+          pvxc_SN_bond=>vxc_SN_bond(iatom)
           pvxc_SN_neighbors=>pvxc_SN%neighbors(matom)
           pvxc_SN_bond_neighbors=>pvxc_SN_bond%neighbors(matom)
-          norb_nu = species(in1)%norb_max
-          allocate (pvxc_SN_neighbors%Dblocko(3,norb_mu, norb_nu))
-          allocate (pvxc_SN_bond_neighbors%Dblocko(3,norb_mu, norb_nu))
-          pvxc_SN_neighbors%Dblocko= 0.0d0
-          pvxc_SN_bond_neighbors%Dblocko= 0.0d0
+
+          allocate (pvxc_SN_neighbors%Dblock(3,norb_mu, norb_mu))
+          allocate (pvxc_SN_bond_neighbors%Dblock(3,norb_mu, norb_mu))
+          pvxc_SN_neighbors%Dblock = 0.0d0
+          pvxc_SN_bond_neighbors%Dblock = 0.0d0
 
 ! SPECIAL LOOP: we want to minimize the number of calls to lda-function
 ! we only need to call lda_ceperley-adler for each pair of shells
@@ -450,13 +451,13 @@
      &          s%rho_bond(iatom)%neighbors(matom)%Dblock(:,imu,imu)
 
 ! calculate GSN for rho_in      
-               pvxc_SN_neighbors%Dblocko(:,imu,imu) =                        &
+               pvxc_SN_neighbors%Dblock(:,imu,imu) =                         &
      &          Dprho_in_shell*d2muxc_in*(prho_in -prho_in_shell)            &
      &          + dmuxc_in*(Dprho_in - Dprho_in_shell) + dmuxc_in*Dprho_in_shell
 
-               pvxc_SN_bond_neighbors%Dblocko(:,imu,imu) =                   &
+               pvxc_SN_bond_neighbors%Dblock(:,imu,imu) =                    &
      &          Dprho_bond_shell*d2muxc_bond*(prho_bond -prho_bond_shell)    &
-     &          + dmuxc_bond*(Dprho_bond - Dprho_bond_shell)          
+     &          + dmuxc_bond*(Dprho_bond - Dprho_bond_shell) + dmuxc_bond*Dprho_bond_shell          
             end do ! m1 = -l1, l1
 
 ! Loop over shells ineigh
@@ -500,12 +501,11 @@
                       s%rho_bond(iatom)%neighbors(matom)%Dblock(:,imu,inu)
 
 ! calculate GSN for rho_in
-                    pvxc_SN_neighbors%Dblocko(:,imu,inu)=                      &
-     &                Dprho_in_shell*d2muxc_in*prho_in + dmuxc_in*Dprho_in                   
+                    pvxc_SN_neighbors%Dblock(:,imu,inu)=                       &
+     &                Dprho_in_shell*d2muxc_in*prho_in + dmuxc_in*Dprho_in
                     
-                    pvxc_SN_bond_neighbors%Dblocko(:,imu,inu)=                 &
+                    pvxc_SN_bond_neighbors%Dblock(:,imu,inu)=                  &
      &                Dprho_bond_shell*d2muxc_bond*prho_bond + dmuxc_bond*Dprho_bond             
-
                   end if ! imu .eq. inu
                 end do !do m2 = -l2, l2
               end do !do m1 = -l1, l1
@@ -602,27 +602,29 @@
 ! ===========================================================================
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
-          ! cut some lengthy notation
-          pvxc_bond=>vxc_bond(iatom)
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
-          num_neigh = s%neighbors(iatom)%neighn
-          allocate (pvxc_bond%neighbors(num_neigh))
+
+          ! cut some lengthy notation
+          pvxc_bond=>vxc_bond(iatom)
 
 ! Loop over the neighbors of each iatom.
+          num_neigh = s%neighbors(iatom)%neighn
+          allocate (pvxc_bond%neighbors(num_neigh))
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
-            ! cut some more lengthy notation
-            pvxc_bond_neighbors=>pvxc_bond%neighbors(ineigh)
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
 
+            ! cut some more lengthy notation
+            pvxc_bond_neighbors=>pvxc_bond%neighbors(ineigh)
+
 ! Allocate block size
             norb_nu = species(in2)%norb_max
-            allocate (pvxc_bond_neighbors%Dblock(3, norb_mu, norb_nu))
-            pvxc_bond_neighbors%Dblock = 0.0d0
+            allocate (pvxc_bond_neighbors%Dblocko(3, norb_mu, norb_nu))
+            pvxc_bond_neighbors%Dblocko = 0.0d0
 
 ! SET-UP STUFF
 ! ****************************************************************************
@@ -693,7 +695,7 @@
               call Drotate (in1, in2, eps, deps, norb_mu, norb_nu,           &
      &                      bcxcm, vdcxcm, vdbcxcx)
 
-              pvxc_bond_neighbors%Dblock = vdbcxcx
+              pvxc_bond_neighbors%Dblocko = vdbcxcx
               deallocate (bcxcm, bcxcx)
               deallocate (dbcxcm, vdcxcm)
               deallocate (vdbcxcx)

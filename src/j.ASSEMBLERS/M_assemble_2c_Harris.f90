@@ -684,9 +684,11 @@
         do iatom = 1, s%natoms
           do ineigh=1, s%neighbors(iatom)%neighn
             deallocate (s%overlap(iatom)%neighbors(ineigh)%block)
-            deallocate (s%kinetic(iatom)%neighbors(ineigh)%block)
-            deallocate (s%vna(iatom)%neighbors(ineigh)%block)
+            deallocate (s%kinetic(iatom)%neighbors(ineigh)%blocko)
+            deallocate (s%vna(iatom)%neighbors(ineigh)%blocko)
           end do
+          matom = s%neigh_self(iatom)
+          deallocate (s%vna(iatom)%neighbors(ineigh)%Dblock)
           deallocate (s%overlap(iatom)%neighbors)
           deallocate (s%kinetic(iatom)%neighbors)
           deallocate (s%vna(iatom)%neighbors)

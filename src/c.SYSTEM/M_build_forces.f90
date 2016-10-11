@@ -326,7 +326,7 @@
             do inu = 1, norb_mu
               do imu = 1, norb_mu
                 pfi%vxc_on_site(:,ineigh) = pfi%vxc_on_site(:,ineigh)        &     
-     &           - pRho_neighbors_matom%block(imu,inu)*pvxc_neighbors%Dblocko(:,imu,inu)
+     &           - pRho_neighbors_matom%block(imu,inu)*pvxc_neighbors%Dblock(:,imu,inu)
               end do
             end do
           end do ! end loop over neighbors
@@ -366,7 +366,7 @@
               do inu = 1, norb_nu
                 do imu = 1, norb_mu
                   pfi%vxc_off_site(:,ineigh) = pfi%vxc_off_site(:,ineigh)    &
-     &             - pRho_neighbors%block(imu,inu)*pvxc_neighbors%Dblock(:,imu,inu)
+     &             - pRho_neighbors%block(imu,inu)*pvxc_neighbors%Dblocko(:,imu,inu)
                 end do
               end do
             end if

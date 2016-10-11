@@ -126,18 +126,20 @@
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
             ! cut some more lengthy notation
             pSR_neighbors=>pewaldsr%neighbors(ineigh)
-            pLR_neighbors=>pewaldlr%neighbors(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             in2 = s%atom(jatom)%imass
 
 ! Allocate block size
             norb_nu = species(in2)%norb_max
-            allocate (pSR_neighbors%Dblock(3, norb_mu, norb_nu))
-             allocate (pLR_neighbors%Dblock(3, norb_mu, norb_nu))
-            pSR_neighbors%Dblock = 0.0d0
-            pLR_neighbors%Dblock = 0.0d0
-
+            allocate (pSR_neighbors%Dblocko(3, norb_mu, norb_nu))
+            pSR_neighbors%Dblocko = 0.0d0
           end do ! end loop over neighbors
+          matom = s%neigh_self(iatom)
+
+          ! cut some lengthy notation
+          pSR_neighbors=>pewaldsr%neighbors(matom)
+          allocate (pSR_neighbors%Dblock(3, norb_mu, norb_mu))
+          pSR_neighbors%Dblock = 0.0d0
         end do ! end loop over atoms
 
 ! Deallocate Arrays
@@ -223,10 +225,15 @@
 
 ! Allocate block size
             norb_nu = species(in2)%norb_max
-            allocate (pLR_neighbors%Dblock(3, norb_mu, norb_nu))
-            pLR_neighbors%Dblock = 0.0d0
-
+            allocate (pLR_neighbors%Dblocko(3, norb_mu, norb_nu))
+            pLR_neighbors%Dblocko = 0.0d0
           end do ! end loop over neighbors
+          matom = s%neigh_self(iatom)
+
+          ! cut some lengthy notation
+          pLR_neighbors=>pewaldsr%neighbors(matom)
+          allocate (pLR_neighbors%Dblock(3, norb_mu, norb_mu))
+          pLR_neighbors%Dblock = 0.0d0
         end do ! end loop over atoms
 
 ! Deallocate Arrays
@@ -284,9 +291,12 @@
 ! ===========================================================================
         do iatom = 1, s%natoms
           do ineigh = 1, s%neighbors(iatom)%neighn
-            deallocate (s%ewaldsr(iatom)%neighbors(ineigh)%Dblock)
-            deallocate (s%ewaldlr(iatom)%neighbors(ineigh)%Dblock)
+            deallocate (s%ewaldsr(iatom)%neighbors(ineigh)%Dblocko)
+            deallocate (s%ewaldlr(iatom)%neighbors(ineigh)%Dblocko)
           end do
+          matom = s%neigh_self(iatom)
+          deallocate (s%ewaldsr(iatom)%neighbors(matom)%Dblock)
+          deallocate (s%ewaldlr(iatom)%neighbors(matom)%Dblock)
           deallocate (s%ewaldsr(iatom)%neighbors)
           deallocate (s%ewaldlr(iatom)%neighbors)
         end do

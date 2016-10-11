@@ -126,10 +126,15 @@
 
 ! Allocate block size
             norb_nu = species(in2)%norb_max
-            allocate (pSR_neighbors%block(norb_mu, norb_nu))
-            pSR_neighbors%block = 0.0d0
+            allocate (pSR_neighbors%blocko(norb_mu, norb_nu))
             pSR_neighbors%blocko = 0.0d0
           end do ! end loop over neighbors
+          matom = s%neigh_self(iatom)
+
+          ! cut some lengthy notation
+          pSR_neighbors=>pewaldsr%neighbors(matom)
+          allocate (pSR_neighbors%block(norb_mu, norb_mu))
+          pSR_neighbors%block = 0.0d0
         end do ! end loop over atoms
 
 ! Deallocate Arrays
@@ -215,10 +220,15 @@
 
 ! Allocate block size
             norb_nu = species(in2)%norb_max
-            allocate (pLR_neighbors%block(norb_mu, norb_nu))
-            pLR_neighbors%block = 0.0d0
+            allocate (pLR_neighbors%blocko(norb_mu, norb_nu))
             pLR_neighbors%blocko = 0.0d0
           end do ! end loop over neighbors
+          matom = s%neigh_self(iatom)
+
+          ! cut some lengthy notation
+          pLR_neighbors=>pewaldlr%neighbors(matom)
+          allocate (pLR_neighbors%block(norb_mu, norb_mu))
+          pLR_neighbors%block = 0.0d0
         end do ! end loop over atoms
 
 ! Deallocate Arrays
@@ -276,11 +286,12 @@
 ! ===========================================================================
         do iatom = 1, s%natoms
           do ineigh = 1, s%neighbors(iatom)%neighn
-            deallocate (s%ewaldsr(iatom)%neighbors(ineigh)%block)
             deallocate (s%ewaldsr(iatom)%neighbors(ineigh)%blocko)
-            deallocate (s%ewaldlr(iatom)%neighbors(ineigh)%block)
             deallocate (s%ewaldlr(iatom)%neighbors(ineigh)%blocko)
           end do
+          matom = s%neigh_self(iatom)
+          deallocate (s%ewaldsr(iatom)%neighbors(matom)%block)
+          deallocate (s%ewaldlr(iatom)%neighbors(matom)%block)
           deallocate (s%ewaldsr(iatom)%neighbors)
           deallocate (s%ewaldlr(iatom)%neighbors)
         end do
