@@ -83,6 +83,7 @@
 
           integer, pointer :: neigh_b (:)        ! which cell is the neighbor
           integer, pointer :: neigh_j (:)        ! which atom is the neighbor
+          integer, pointer :: neigh_back (:)     ! the backwards neighbor number
 
           ! common neighbor information - iatom and jatom are common neighbors
           ! to the third center
