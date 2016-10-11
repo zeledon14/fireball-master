@@ -1,6 +1,6 @@
 ! copyright info:
 !
-!                             @Copyright 2009
+!                             @Copyright 2016
 !                           Fireball Committee
 ! West Virginia University - James P. Lewis, Chair
 ! Arizona State University - Otto F. Sankey
@@ -584,30 +584,30 @@
 ! blocks.  We calculate the atom cases in a separate loop.
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
-          ! cut some lengthy notation
-          pvna=>s%vna(iatom)
-
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
-          num_neigh = s%neighbors(iatom)%neighn
-          allocate (pvna%neighbors(num_neigh))
+
+          ! cut some lengthy notation
+          pvna=>s%vna(iatom)
 
 ! Loop over the neighbors of each iatom.
+          num_neigh = s%neighbors(iatom)%neighn
+          allocate (pvna%neighbors(num_neigh))
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
-            ! cut some more lengthy notation
-            pvna_neighbors=>pvna%neighbors(ineigh)
-
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
 
+            ! cut some more lengthy notation
+            pvna_neighbors=>pvna%neighbors(ineigh)
+
 ! Allocate block size
             norb_nu = species(in2)%norb_max
             allocate (pvna_neighbors%block(norb_mu, norb_nu))
-            pvna_neighbors%block = 0.0d0
             allocate (pvna_neighbors%blocko(norb_mu, norb_nu))
+            pvna_neighbors%block = 0.0d0
             pvna_neighbors%blocko = 0.0d0
 
 ! SET-UP STUFF
@@ -648,17 +648,21 @@
 
 ! Neutral atom case
               isorp = 0
-              call getMEs_Fdata_2c (in1, in3, interaction, isorp, z, norb_mu,&
+              call getMEs_Fdata_2c (in1, in2, interaction, isorp, z, norb_mu,&
      &                              norb_nu, bcnam)
               call rotate (in1, in3, eps, norb_mu, norb_nu, bcnam, bcnax)
               pvna_neighbors%blocko = pvna_neighbors%blocko + bcnax*P_eq2
 
 ! Charged atom cases
               do isorp = 1, species(in1)%nssh
-                call getMEs_Fdata_2c (in1, in3, interaction, isorp, z,       &
+                dQ = s%atom(iatom)%shell(isorp)%dQ
+
+! Reinitialize
+                bcnam = 0.0d0; bcnax = 0.0d0
+                call getMEs_Fdata_2c (in1, in2, interaction, isorp, z,       &
      &                                norb_mu, norb_nu, bcnam)
                 call rotate (in1, in3, eps, norb_mu, norb_nu, bcnam, bcnax)
-                dQ = s%atom(iatom)%shell(isorp)%dQ
+
                 pvna_neighbors%blocko = pvna_neighbors%blocko + dQ*bcnax*P_eq2
               end do ! isorp
 
@@ -675,10 +679,11 @@
 
 ! Charged atom case
               do isorp = 1, species(in2)%nssh
+                dQ = s%atom(jatom)%shell(isorp)%dQ
+
                 call getMEs_Fdata_2c (in1, in2, interaction, isorp, z,       &
      &                                norb_mu, norb_nu, bcnam)
                 call rotate (in1, in3, eps, norb_mu, norb_nu, bcnam, bcnax)
-                dQ = s%atom(jatom)%shell(isorp)%dQ
 
                 ! Note that we are smoothing here
                 pvna_neighbors%blocko = pvna_neighbors%blocko + dQ*bcnax*P_eq2
@@ -697,22 +702,18 @@
 ! First, do vna_atom case. Here we compute <i | v(j) | i> matrix elements.
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
-          ! cut some lengthy notation
-          pvna=>s%vna(iatom)
-          poverlap=>s%overlap(iatom)
-
-          matom = s%neigh_self(iatom)
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
-          num_neigh = s%neighbors(iatom)%neighn
+          matom = s%neigh_self(iatom)
+
+          ! cut some lengthy notation
+          pvna=>s%vna(iatom); pvna_neighbors=>pvna%neighbors(matom)
+          poverlap=>s%overlap(iatom); pS_neighbors=>poverlap%neighbors(matom)
 
 ! Loop over the neighbors of each iatom.
+          num_neigh = s%neighbors(iatom)%neighn
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
-            ! cut some more lengthy notation
-            pvna_neighbors=>pvna%neighbors(matom)
-            pS_neighbors=>poverlap%neighbors(matom)
-
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
@@ -792,10 +793,12 @@
 
 ! Charged atom cases
             do isorp = 1, species(in2)%nssh
+              dQ = s%atom(jatom)%shell(isorp)%dQ
+
               call getMEs_Fdata_2c (in1, in2, interaction, isorp, z, norb_mu,&
      &                              norb_nu, bcnam)
               call rotate (in1, in3, eps, norb_mu, norb_nu, bcnam, bcnax)
-              dQ = s%atom(jatom)%shell(isorp)%dQ
+
               pvna_neighbors%block = pvna_neighbors%block                    &
       &        + (smooth*bcnax + (1.0d0 - smooth)*emnpl)*dQ*P_eq2
             end do ! isorp
