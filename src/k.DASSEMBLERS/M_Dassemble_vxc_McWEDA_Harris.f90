@@ -149,6 +149,7 @@
           num_neigh = s%neighbors(iatom)%neighn
           matom = s%neigh_self(iatom)
           pvxc_neighbors_self=>pvxc%neighbors(matom)
+
 ! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
             ! cut some more lengthy notation

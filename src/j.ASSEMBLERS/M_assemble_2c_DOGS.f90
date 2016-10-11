@@ -294,8 +294,8 @@
 
 ! Allocate block size
             norb_nu = species(in2)%norb_max
-            allocate (pK_neighbors%block(norb_mu, norb_nu))
-            pK_neighbors%block = 0.0d0
+            allocate (pK_neighbors%blocko(norb_mu, norb_nu))
+            pK_neighbors%blocko = 0.0d0
 
 ! SET-UP STUFF
 ! ****************************************************************************
@@ -325,9 +325,8 @@
             call getMEs_Fdata_2c (in1, in2, interaction, isorp, z,           &
      &                            norb_mu, norb_nu, tm)
             call rotate (in1, in3, eps, norb_mu, norb_nu, tm, tx)
-            pK_neighbors%block = tx
-            deallocate (tm)
-            deallocate (tx)
+            pK_neighbors%blocko = tx
+            deallocate (tm, tx)
           end do ! end loop over neighbors
         end do ! end loop over atoms
 

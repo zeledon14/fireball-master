@@ -110,7 +110,7 @@
         logfile = s%logfile
 
         write (logfile,*)
-!        write (logfile,*) ' Welcome to neighbors - determine neighbor mapping. '
+!       write (logfile,*) ' Welcome to neighbors - determine neighbor mapping. '
         if (ifix_neighbors .eq. 1) then
           call read_NEIGHBORS (s)
         else
@@ -312,6 +312,7 @@
           end do ! mbeta over the cells
           allocate (s%neighbors(iatom)%neigh_b(num_neigh))
           allocate (s%neighbors(iatom)%neigh_j(num_neigh))
+          allocate (s%neighbors(iatom)%neigh_back(num_neigh))
         end do ! loop over iatom
 
 ! Deallocate Arrays
@@ -434,10 +435,15 @@
           s%neighbors(iatom)%neighn = num_neigh
         end do ! loop over iatom
 
-! Set up neigh_self.  The variable neigh_self(s%natoms) is the ineigh value for
-! the "self interaction".  Find the neighbor-number of iatom with itself
-! (neigh_self) in order to put the result of VNA_atom (doscentros) into
-! VNA(mu,nu,neigh_self,iatom).
+! Set up neigh_self and neigh_back.  The variable neigh_self(s%natoms) is the
+! ineigh value for the "self interaction".  We will later need the
+! neighbor-number of iatom with itself (neigh_self) in order to put the result
+! of VNA_atom (doscentros) into VNA(mu,nu,neigh_self,iatom). The variable
+! neigh_back(s%natoms) is used in the Mulliken charges since we take an average
+! of two density matrix elements - iatom, ineigh pair and jatom, jneigh pair
+! where jatom is the atom number of the ineigh neighbor of iatom and jneigh is
+! neighbor number of iatom to jatom.
+
 ! Initialize to something ridiculous.
         s%neigh_self = -999
         do iatom = 1, s%natoms
@@ -448,9 +454,26 @@
               s%neigh_self(iatom) = ineigh
               exit
             end if
+            s%neighbors(iatom)%neigh_back(ineigh) = -999
+            do jneigh = 1, s%neighbors(jatom)%neighn
+              jbeta = s%neighbors(jatom)%neigh_b(jneigh)
+              katom = s%neighbors(jatom)%neigh_j(jneigh)
+              if (iatom .ne. katom                                           &
+     &            .or. distance(s%xl(mbeta)%a,s%xl(jbeta)%a) .gt. 1.0d-3) then
+                  ! do nothing - there is no match here
+                else
+                  s%neighbors(iatom)%neigh_back(ineigh) = jneigh
+                exit
+              end if
+            end do
           end do
           if (s%neigh_self(iatom) .eq. -999) then
             write (*,*) ' Cannot find neigh_self for iatom = ', iatom
+            write (*,*) ' structure = ', s%basisfile
+            stop
+          end if
+          if (s%neighbors(iatom)%neigh_back(ineigh) .eq. -999) then
+            write (*,*) ' Cannot find neigh_back for iatom = ', iatom
             write (*,*) ' structure = ', s%basisfile
             stop
           end if

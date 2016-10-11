@@ -109,12 +109,13 @@
         integer in1, in2, in3            !< species numbers
         integer isubtype                 !< which subtype
         integer interaction, isorp       !< which interaction and subtype
-        integer ix, iindex
+        integer iindex
         integer nssh_i, nssh_j           !< size of the block for the pair
         integer issh, jssh               !< counter over shells
         integer norb_mu, norb_nu         !< size of the block for the pair
         integer imu, inu
         integer n1, n2, l1, l2, m1, m2     !< quantum numbers n, l, and m
+
         real dexc_in                       !< 1st derivative of xc
         real d2exc_in                      !< 2nd derivativive of xc
         real dmuxc_in                      !< 1st derivative of xc
@@ -317,45 +318,38 @@
                 dxbcxcm = 0.0d0; dybcxcm = 0.0d0;
                 vdxcMa = 0.0d0; vdxcMb = 0.0d0;
                 vdxcXa = 0.0d0; vdxcXb = 0.0d0; vdxcXc = 0.0d0
-                                
                 call getDMEs_Fdata_3c (in1, in2, in3, P_rho_3c, isubtype, x, &
      &                                 z, norb_mu, norb_nu, cost, rhat,      &
      &                                 sighat, bcxcm, dpbcxcm, dxbcxcm, dybcxcm)
              
                 ! Rotate into crystal coordinates
                 call rotate (in1, in2, eps, norb_mu, norb_nu, bcxcm, bcxcx)
-                do ix = 1, 3
 
 ! The first piece will be the force with respect to atom 3.
-                 if (x .gt. 1.0d-5) then
-                  amt(ix) = (sighat(ix) - cost*rhat(ix))/x
-                 else
+                if (x .gt. 1.0d-5) then
+                  amt = (sighat - cost*rhat)/x
+                else
                   amt = 0.0d0
-                 end if
-
-                 bmt(:) = (cost*sighat(:) - rhat(:))/z
-
-                 pFdata_bundle => Fdata_bundle_3c(in1, in2, in3)
-                 pFdata_cell =>                                               &
-     &             pFdata_bundle%Fdata_cell_3c(pFdata_bundle%index_3c(P_rho_3c,isubtype,1))
-
-                 do iindex = 1, pFdata_cell%nME
-                   imu = pFdata_cell%mu_3c(iindex)
-                   inu = pFdata_cell%nu_3c(iindex)
-
-! Now recover f3naMa which is a two-dimensional array
-                   vdxcMa(ix,imu,inu) = rhat(ix)*dxbcxcm(imu,inu)            &
-     &                                 + amt(ix)*dpbcxcm(imu,inu)
+                end if
 
 ! The second piece will be the force with respect to atom 1.
-                   bmt(ix) = (cost*sighat(ix) - rhat(ix))/z
+                bmt = (cost*sighat - rhat)/z
+
+                pFdata_bundle => Fdata_bundle_3c(in1, in2, in3)
+                pFdata_cell =>                                               &
+     &            pFdata_bundle%Fdata_cell_3c(pFdata_bundle%index_3c(P_rho_3c,isubtype,1))
+
+                do iindex = 1, pFdata_cell%nME
+                  imu = pFdata_cell%mu_3c(iindex)
+                  inu = pFdata_cell%nu_3c(iindex)
+
+! Now recover f3naMa which is a two-dimensional array
+                  vdxcMa(:,imu,inu) = rhat*dxbcxcm(imu,inu) + amt*dpbcxcm(imu,inu)
 
 ! Now recover f3naMb which is a two-dimensional array
-                   vdxcMb(ix,imu,inu) = - sighat(ix)*dybcxcm(imu, inu)       &
-     &                                   + bmt(ix)*dpbcxcm(imu, inu)         &
-     &                                   - vdxcMa(ix,imu,inu)/2.0d0
+                  vdxcMb(:,imu,inu) = - sighat*dybcxcm(imu,inu)              &
+     &             + bmt*dpbcxcm(imu, inu) - vdxcMa(:,imu,inu)/2.0d0
                  end do ! iindex
-                end do ! ix
                
 ! ***************************************************************************
 ! Convert to Crystal Coordinates
@@ -416,9 +410,8 @@
               do isubtype = 1, species(in3)%nssh
                 Qneutral = species(in3)%shell(isubtype)%Qneutral
                                 
-                bcxcm= 0.0d0; dpbcxcm= 0.0d0
-                dxbcxcm= 0.0d0; dybcxcm= 0.0d0
-
+                bcxcm = 0.0d0; dpbcxcm = 0.0d0
+                dxbcxcm = 0.0d0; dybcxcm = 0.0d0
                 call getDMEs_Fdata_3c (in1, in2, in3, P_rhoS_3c, isubtype, x,&
      &                                 z, nssh_i, nssh_j, cost, rhat, sighat,&
      &                                 bcxcm, dpbcxcm, dxbcxcm, dybcxcm)
@@ -491,8 +484,8 @@
               end do ! issh = 1, species(in1)%nss
               
               do inu =1, norb_nu
-                do imu=1, norb_mu
-                  pfalpha%f3xca= pfalpha%f3xca + pRho_neighbors%block(imu,inu)*mxca(:,imu,inu)
+                do imu =1, norb_mu
+                  pfalpha%f3xca = pfalpha%f3xca + pRho_neighbors%block(imu,inu)*mxca(:,imu,inu)
                   pfi%f3xcb = pfi%f3xcb + pRho_neighbors%block(imu,inu)*mxcb(:,imu,inu)
                   pfj%f3xcc = pfj%f3xcc + pRho_neighbors%block(imu,inu)*mxcc(:,imu,inu)
                 end do !imu , norb_mu

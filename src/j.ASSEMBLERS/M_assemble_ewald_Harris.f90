@@ -128,7 +128,7 @@
             norb_nu = species(in2)%norb_max
             allocate (pSR_neighbors%block(norb_mu, norb_nu))
             pSR_neighbors%block = 0.0d0
-
+            pSR_neighbors%blocko = 0.0d0
           end do ! end loop over neighbors
         end do ! end loop over atoms
 
@@ -217,7 +217,7 @@
             norb_nu = species(in2)%norb_max
             allocate (pLR_neighbors%block(norb_mu, norb_nu))
             pLR_neighbors%block = 0.0d0
-
+            pLR_neighbors%blocko = 0.0d0
           end do ! end loop over neighbors
         end do ! end loop over atoms
 
@@ -277,7 +277,9 @@
         do iatom = 1, s%natoms
           do ineigh = 1, s%neighbors(iatom)%neighn
             deallocate (s%ewaldsr(iatom)%neighbors(ineigh)%block)
+            deallocate (s%ewaldsr(iatom)%neighbors(ineigh)%blocko)
             deallocate (s%ewaldlr(iatom)%neighbors(ineigh)%block)
+            deallocate (s%ewaldlr(iatom)%neighbors(ineigh)%blocko)
           end do
           deallocate (s%ewaldsr(iatom)%neighbors)
           deallocate (s%ewaldlr(iatom)%neighbors)
