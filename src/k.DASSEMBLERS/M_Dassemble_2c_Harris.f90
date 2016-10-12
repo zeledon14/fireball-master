@@ -855,7 +855,7 @@
             do inu = 1, norb_mu
               do imu = 1, norb_mu
                 pfi%vna_atom(:,ineigh) = pfi%vna_atom(:,ineigh)              &
-      &           - pRho_neighbors_matom%block(imu,inu)*pvna_neighbors%Dblock(:,imu,inu)
+      &           - pRho_neighbors_matom%block(imu,inu)*vdbcnax(:,imu,inu)*P_eq2
                end do
             end do
             deallocate (bcnam, dbcnam, vdbcnam, vdbcnax)
@@ -920,10 +920,7 @@
           do ineigh = 1, s%neighbors(iatom)%neighn
             deallocate (s%overlap(iatom)%neighbors(ineigh)%Dblock)
             deallocate (s%kinetic(iatom)%neighbors(ineigh)%Dblocko)
-            deallocate (s%vna(iatom)%neighbors(ineigh)%Dblocko)
           end do
-          matom = s%neigh_self(iatom)
-          deallocate (s%vna(iatom)%neighbors(ineigh)%Dblock)
         end do
 
 ! Deallocate Arrays

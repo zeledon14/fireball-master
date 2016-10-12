@@ -439,7 +439,7 @@
 
 ! Variable Declaration and Description
 ! ===========================================================================
-        integer iatom, ineigh           !< counter over atoms and neighbors
+        integer iatom, ineigh, matom    !< counter over atoms and neighbors
         integer in1, in2, in3           !< species numbers
         integer jatom                   !< neighbor of iatom
         integer interaction, isorp      !< which interaction and subtype
@@ -678,6 +678,7 @@
 ! ===========================================================================
         integer iatom                             !< counter over atoms
         integer ineigh                            !< counter over neighbors
+        integer matom
 
 ! Procedure
 ! ===========================================================================
@@ -685,10 +686,9 @@
           do ineigh=1, s%neighbors(iatom)%neighn
             deallocate (s%overlap(iatom)%neighbors(ineigh)%block)
             deallocate (s%kinetic(iatom)%neighbors(ineigh)%blocko)
+            deallocate (s%vna(iatom)%neighbors(ineigh)%block)
             deallocate (s%vna(iatom)%neighbors(ineigh)%blocko)
           end do
-          matom = s%neigh_self(iatom)
-          deallocate (s%vna(iatom)%neighbors(ineigh)%Dblock)
           deallocate (s%overlap(iatom)%neighbors)
           deallocate (s%kinetic(iatom)%neighbors)
           deallocate (s%vna(iatom)%neighbors)
