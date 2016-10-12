@@ -201,11 +201,10 @@
                   comp_EBS = comp_EBS + pH_neighbors%block(imu,inu)*pRho_neighbors%block(imu,inu)
 
                   ! kinetic energy
-                  comp_KE = comp_KE + pK_neighbors%block(imu,inu)*pRho_neighbors%block(imu,inu)
+                  comp_KE = comp_KE + pK_neighbors%block(imu,inu)*pRho_neighbors%blocko(imu,inu)
 
                   ! Hartree energy
                   comp_VNA = comp_VNA + pvna_neighbors%block(imu,inu)*pRho_neighbors%block(imu,inu)
-                  comp_VNA = comp_VNA + pvna_neighbors%blocko(imu,inu)*pRho_neighbors%block(imu,inu)
 
                   ! exchange-correlation energy
                   comp_VXC = comp_VXC + pvxc_neighbors%block(imu,inu)*pRho_neighbors%block(imu,inu)
