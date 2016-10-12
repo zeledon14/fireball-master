@@ -363,9 +363,9 @@
 
 ! Variable Declaration and Description
 ! ===========================================================================
-        integer iatom, jatom                   !< counter over atoms
+        integer iatom, jatom, katom            !< counter over atoms
         integer in1, in2                       !< species numbers
-        integer ineigh                         !< counter over neighbors
+        integer ineigh, jneigh                 !< counter over neighbors
         integer issh                           !< counter over shells
         integer mbeta                          !< counter over shells
         integer num_neigh                      !< number of neighbors counter

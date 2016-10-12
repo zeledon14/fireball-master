@@ -444,7 +444,6 @@
         integer jatom                   !< neighbor of iatom
         integer interaction, isorp      !< which interaction and subtype
         integer num_neigh               !< number of neighbors
-        integer matom                   !< matom is the self-interaction atom
         integer mbeta                   !< the cell containing neighbor of iatom
 
         integer norb_mu, norb_nu        !< size of the block for the pair
