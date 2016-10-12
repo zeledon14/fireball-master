@@ -223,20 +223,11 @@
             norb_nu = species(in2)%norb_max
             allocate(pH_neighbors%block(norb_mu, norb_nu))
 
-            pH_neighbors%block = pK_neighbors%blocko + pvna_neighbors%blocko  &
-        &                       + pvxc_neighbors%blocko - pSR_neighbors%blocko&
-        &                       + pLR_neighbors%blocko
+            pH_neighbors%block = pK_neighbors%block + pvna_neighbors%block   & 
+        &                        + pvna_neighbors%blocko                     &
+        &                        + pvxc_neighbors%block - pSR_neighbors%block&
+        &                        + pLR_neighbors%block
           end do
-          matom = s%neigh_self(iatom)
-          ! cut some lengthy notation
-          pH_neighbors=>pHamiltonian%neighbors(matom)
-          pvna_neighbors=>pvna%neighbors(matom)
-          pvxc_neighbors=>pvxc%neighbors(matom)
-          pSR_neighbors=>pewaldsr%neighbors(matom)
-          pLR_neighbors=>pewaldlr%neighbors(matom)
-
-          pH_neighbors%block = pvna_neighbors%block + pvxc_neighbors%block    &
-        &                     - pSR_neighbors%block + pLR_neighbors%block
         end do
 
 ! Format Statements
