@@ -225,8 +225,8 @@
 
             pH_neighbors%block = pK_neighbors%blocko + pvna_neighbors%block  &
         &                       + pvna_neighbors%blocko                      &
-        &                       + pvxc_neighbors%block - pSR_neighbors%block &
-        &                       + pLR_neighbors%block
+        &                       + pvxc_neighbors%block - pSR_neighbors%blocko&
+        &                       + pLR_neighbors%blocko
           end do
         end do
 
