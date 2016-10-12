@@ -224,9 +224,9 @@
             allocate(pH_neighbors%block(norb_mu, norb_nu))
 
             pH_neighbors%block = pK_neighbors%blocko + pvna_neighbors%block  &
-        &                        + pvna_neighbors%blocko                     &
-        &                        + pvxc_neighbors%block - pSR_neighbors%block&
-        &                        + pLR_neighbors%block
+        &                       + pvna_neighbors%blocko                      &
+        &                       + pvxc_neighbors%block - pSR_neighbors%block &
+        &                       + pLR_neighbors%block
           end do
         end do
 

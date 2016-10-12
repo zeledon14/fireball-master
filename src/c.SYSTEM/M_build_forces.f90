@@ -301,12 +301,12 @@
 
 ! Now loop over all neighbors ineigh of iatom.
 ! Notice the explicit negative sign, this makes it force like.
-            do inu = 1, norb_mu
-              do imu = 1, norb_mu
-                pfi%vna_atom(:,ineigh) = pfi%vna_atom(:,ineigh)              &
-     &           - pRho_neighbors_matom%block(imu,inu)*pvna_neighbors%Dblock(:,imu,inu)
-              end do
-            end do
+!           do inu = 1, norb_mu
+!             do imu = 1, norb_mu
+!               pfi%vna_atom(:,ineigh) = pfi%vna_atom(:,ineigh)              &
+!     &           - pRho_neighbors_matom%block(imu,inu)*pvna_neighbors%Dblock(:,imu,inu)
+!              end do
+!           end do
           end do ! end loop over neighbors
 
 

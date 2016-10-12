@@ -544,7 +544,7 @@
         
 ! Variable Declaration and Description
 ! ===========================================================================
-        integer iatom, ineigh           !< counter over atoms and neighbors
+        integer iatom, ineigh, matom    !< counter over atoms and neighbors
         integer in1, in2, in3           !< species numbers
         integer imu, inu                !< counter over orbitals
         integer jatom                   !< neighbor of iatom
@@ -592,7 +592,7 @@
         do iatom = 1, s%natoms
           pfi=>s%forces(iatom)
           num_neigh = s%neighbors(iatom)%neighn
-!         allocate (pfi%vna_atom (3, num_neigh)); pfi%vna_atom = 0.0d0
+          allocate (pfi%vna_atom (3, num_neigh)); pfi%vna_atom = 0.0d0
           allocate (pfi%vna_ontop (3, num_neigh)); pfi%vna_ontop = 0.0d0
         end do
 
@@ -603,6 +603,7 @@
 ! blocks.  We calculate the atom cases in a separate loop.
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
+          matom = s%neigh_self(iatom)
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
@@ -610,6 +611,7 @@
           ! cut some lengthy notation
           pvna=>s%vna(iatom)
           pdenmat=>s%denmat(iatom)
+          pRho_neighbors_matom=>pdenmat%neighbors(matomh)
           pfi=>s%forces(iatom)
 
 ! Loop over the neighbors of each iatom.
@@ -847,8 +849,15 @@
 
             call Drotate (in1, in3, eps, deps, norb_mu, norb_nu, bcnam,      &
      &                    vdbcnam, vdbcnax)
-            pvna_neighbors%Dblock = pvna_neighbors%Dblock + vdbcnax*P_eq2
+!           pvna_neighbors%Dblock = pvna_neighbors%Dblock + vdbcnax*P_eq2
             
+! Notice the explicit negative sign, this makes it force like.
+            do inu = 1, norb_mu
+              do imu = 1, norb_mu
+                pfi%vna_atom(:,ineigh) = pfi%vna_atom(:,ineigh)              &
+      &           - pRho_neighbors_matom%block(imu,inu)*pvna_neighbors%Dblock(:,imu,inu)
+               end do
+            end do
             deallocate (bcnam, dbcnam, vdbcnam, vdbcnax)
           end do ! end loop over neighbors
         end do ! end loop over atoms
