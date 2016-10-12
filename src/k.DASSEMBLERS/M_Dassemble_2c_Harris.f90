@@ -584,6 +584,7 @@
         ! density matrix stuff
         type(T_assemble_neighbors), pointer :: pdenmat
         type(T_assemble_block), pointer :: pRho_neighbors
+        type(T_assemble_block), pointer :: pRho_neighbors_matom
 
         type(T_forces), pointer :: pfi
 
