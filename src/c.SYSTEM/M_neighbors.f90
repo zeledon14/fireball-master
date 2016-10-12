@@ -367,7 +367,7 @@
         integer in1, in2                       !< species numbers
         integer ineigh, jneigh                 !< counter over neighbors
         integer issh                           !< counter over shells
-        integer mbeta                          !< counter over shells
+        integer mbeta, jbeta                   !< counter over shells
         integer num_neigh                      !< number of neighbors counter
 
         real range_max                         !< maximum range between atoms
