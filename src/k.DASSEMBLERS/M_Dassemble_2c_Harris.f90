@@ -604,7 +604,6 @@
 ! blocks.  We calculate the atom cases in a separate loop.
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
-          matom = s%neigh_self(iatom)
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
@@ -612,7 +611,6 @@
           ! cut some lengthy notation
           pvna=>s%vna(iatom)
           pdenmat=>s%denmat(iatom)
-          pRho_neighbors_matom=>pdenmat%neighbors(matomh)
           pfi=>s%forces(iatom)
 
 ! Loop over the neighbors of each iatom.
@@ -622,15 +620,11 @@
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
+            norb_nu = species(in2)%norb_max
 
             ! cut some more lengthy notation
             pvna_neighbors=>pvna%neighbors(ineigh)
             pRho_neighbors=>pdenmat%neighbors(ineigh)
-
-! Allocate block size
-            norb_nu = species(in2)%norb_max
-            allocate (pvna_neighbors%Dblock (3, norb_mu, norb_mu))
-            pvna_neighbors%Dblock = 0.0d0
 
 ! SET-UP STUFF
 ! ****************************************************************************
@@ -773,12 +767,16 @@
 ! Loop over the atoms in the central cell.
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
+          matom = s%neigh_self(iatom)
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
 
           ! cut some lengthy notation
           pvna=>s%vna(iatom)
+          pdenmat=>s%denmat(iatom)
+          pRho_neighbors_matom=>pdenmat%neighbors(matom)
+          pfi=>s%forces(iatom)
 
 ! Loop over the neighbors of each iatom.
           num_neigh = s%neighbors(iatom)%neighn
@@ -787,9 +785,6 @@
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
-
-            ! cut some more lengthy notation
-            pvna_neighbors=>pvna%neighbors(ineigh)
 
 ! SET-UP STUFF
 ! ****************************************************************************
@@ -850,10 +845,9 @@
 
             call Drotate (in1, in3, eps, deps, norb_mu, norb_nu, bcnam,      &
      &                    vdbcnam, vdbcnax)
-!           pvna_neighbors%Dblock = pvna_neighbors%Dblock + vdbcnax*P_eq2
             
 ! Notice the explicit negative sign, this makes it force like.
-            do inu = 1, norb_mu
+            do inu = 1, norb_nu
               do imu = 1, norb_mu
                 pfi%vna_atom(:,ineigh) = pfi%vna_atom(:,ineigh)              &
       &           - pRho_neighbors_matom%block(imu,inu)*vdbcnax(:,imu,inu)*P_eq2
