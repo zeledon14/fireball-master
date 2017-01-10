@@ -160,6 +160,7 @@
             allocate (pvxc_neighbors_self%Dblock(3,norb_mu, norb_mu))
 
 ! additions of the terms
+
      !       pvxc_neighbors%Dblocko = vxc_SN(iatom)%neighbors(ineigh)%Dblocko  -   &
      !&             vxc_SN_bond(iatom)%neighbors(ineigh)%Dblocko  +               &
      !&             vxc_bond(iatom)%neighbors(ineigh)%Dblocko
@@ -271,6 +272,7 @@
         type(T_assemble_neighbors), pointer :: pdenmat
         type(T_assemble_block), pointer :: pRho_neighbors
         type(T_assemble_block), pointer :: pRho_neighbors_matom
+
 ! Allocate Arrays
 ! ===========================================================================
 ! None
@@ -372,6 +374,7 @@
      &                   s%rho_bond(iatom)%neighbors(ineigh)%Dblock(:,imu,inu)
 
                        ! This is the SNXC 2 center part
+
      !                  pvxc_SN_neighbors%Dblocko(:,imu,inu) =                     &
                         pfi%vxc_off_site(:,ineigh)= pfi%vxc_off_site(:,ineigh)     &
      &                   - pRho_neighbors%block(imu,inu)*(                         &
@@ -403,6 +406,7 @@
 ! ***************************************************************************
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
+
           ! cut some lengthy notation
           pvxc_SN=>vxc_SN(iatom)
           pvxc_SN_bond=>vxc_SN_bond(iatom)
