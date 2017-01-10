@@ -156,6 +156,7 @@
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             in2 = s%atom(jatom)%imass
             norb_nu = species(in2)%norb_max
+
             allocate (pvxc_neighbors%Dblocko(3,norb_mu, norb_nu))
             allocate (pvxc_neighbors_self%Dblock(3,norb_mu, norb_mu))
 

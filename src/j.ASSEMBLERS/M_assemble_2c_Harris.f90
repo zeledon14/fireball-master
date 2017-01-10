@@ -595,7 +595,6 @@
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
-          num_neigh = s%neighbors(iatom)%neighn
 
           ! cut some more lengthy notation
           pvna=>s%vna(iatom); pvna_neighbors=>pvna%neighbors(matom)
@@ -606,6 +605,7 @@
           pvna_neighbors%block = 0.0d0
 
 ! Loop over the neighbors of each iatom.
+          num_neigh = s%neighbors(iatom)%neighn
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
             jatom = s%neighbors(iatom)%neigh_j(ineigh)

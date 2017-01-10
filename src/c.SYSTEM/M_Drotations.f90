@@ -434,12 +434,11 @@
 ! ===========================================================================
         integer issh, jssh
         integer ix
-  !The name of the module procedure conflicts with a name in the encompassing scoping unit      
+
         integer k1, k2
         integer l1, l2
         integer m1, m2
         integer n1, n2
-        
 
         real left (5, 5)
         real right (5, 5)

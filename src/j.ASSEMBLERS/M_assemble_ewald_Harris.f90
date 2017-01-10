@@ -186,7 +186,8 @@
 
 ! Variable Declaration and Description
 ! ===========================================================================
-        integer iatom, ineigh, matom           !< counter over atoms and neighbors
+
+        integer iatom, ineigh, matom    !< counter over atoms and neighbors
         integer in1, in2                !< species numbers
         integer jatom                   !< neighbor of iatom
         integer num_neigh               !< number of neighbors

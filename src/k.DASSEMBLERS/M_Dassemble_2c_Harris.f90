@@ -598,6 +598,7 @@
         type(T_assemble_neighbors), pointer :: pdenmat
         type(T_assemble_block), pointer :: pRho_neighbors
         type(T_assemble_block), pointer :: pRho_neighbors_matom
+
 !just for testing
         type(T_assemble_block), pointer :: poverlap_neighbors
         type(T_assemble_neighbors), pointer :: poverlap
@@ -621,7 +622,6 @@
 ! blocks.  We calculate the atom cases in a separate loop.
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
-          matom = s%neigh_self(iatom)
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
@@ -629,6 +629,7 @@
           ! cut some lengthy notation
           pvna=>s%vna(iatom)
           pdenmat=>s%denmat(iatom)
+
           pRho_neighbors_matom=>pdenmat%neighbors(matom)
           pfi=>s%forces(iatom)
 
@@ -639,15 +640,11 @@
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
+            norb_nu = species(in2)%norb_max
 
             ! cut some more lengthy notation
             pvna_neighbors=>pvna%neighbors(ineigh)
             pRho_neighbors=>pdenmat%neighbors(ineigh)
-
-! Allocate block size
-            norb_nu = species(in2)%norb_max
-            allocate (pvna_neighbors%Dblock (3, norb_mu, norb_mu))
-            pvna_neighbors%Dblock = 0.0d0
 
 ! SET-UP STUFF
 ! ****************************************************************************
@@ -820,9 +817,10 @@
           pdenmat=>s%denmat(iatom)
           pRho_neighbors_matom=>pdenmat%neighbors(matom)
           pfi=>s%forces(iatom)
+
           poverlap=>s%overlap(iatom)
           poverlap_neighbors=>poverlap%neighbors(matom)
-! Loop over the neighbors of each iatom.
+          ! Loop over the neighbors of each iatom.
           num_neigh = s%neighbors(iatom)%neighn
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
             mbeta = s%neighbors(iatom)%neigh_b(ineigh)
@@ -833,6 +831,7 @@
             ! cut some more lengthy notation
             pvna_neighbors=>pvna%neighbors(ineigh)
             poverlap_neighbors=>s%overlap(iatom)%neighbors(ineigh)
+
 ! SET-UP STUFF
 ! ****************************************************************************
 ! Find r21 = vector pointing from r1 to r2, the two ends of the bondcharge.
@@ -909,6 +908,7 @@
             !print *, '*****************************'
             call Drotate (in1, in3, eps, deps, norb_mu, norb_nu, bcnam,      &
      &                    vdbcnam, vdbcnax)
+
             !print *, 'end'
             !print *, 'r1', r1
             !print *, 'r2', r2
