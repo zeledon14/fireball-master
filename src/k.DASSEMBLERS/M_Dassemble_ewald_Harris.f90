@@ -94,7 +94,7 @@
 
 ! Variable Declaration and Description
 ! ===========================================================================
-        integer iatom, ineigh           !< counter over atoms and neighbors
+        integer iatom, ineigh, matom    !< counter over atoms and neighbors
         integer in1, in2                !< species numbers
         integer jatom                   !< neighbor of iatom
         integer num_neigh               !< number of neighbors
@@ -191,7 +191,7 @@
 
 ! Variable Declaration and Description
 ! ===========================================================================
-        integer iatom, ineigh           !< counter over atoms and neighbors
+        integer iatom, ineigh, matom    !< counter over atoms and neighbors
         integer in1, in2                !< species numbers
         integer jatom                   !< neighbor of iatom
         integer num_neigh               !< number of neighbors
@@ -231,7 +231,7 @@
           matom = s%neigh_self(iatom)
 
           ! cut some lengthy notation
-          pLR_neighbors=>pewaldsr%neighbors(matom)
+          pLR_neighbors=>pewaldlr%neighbors(matom)
           allocate (pLR_neighbors%Dblock(3, norb_mu, norb_mu))
           pLR_neighbors%Dblock = 0.0d0
         end do ! end loop over atoms
@@ -286,7 +286,7 @@
 ! ===========================================================================
         integer iatom                             !< counter over atoms
         integer ineigh                            !< counter over neighbors
-
+        integer matom
 ! Procedure
 ! ===========================================================================
         do iatom = 1, s%natoms

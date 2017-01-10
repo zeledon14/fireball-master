@@ -102,6 +102,8 @@
           ! band-structure interactions
           s%forces(iatom)%kinetic = 0.0d0
           s%forces(iatom)%vna = 0.0d0
+          s%forces(iatom)%vna_self = 0.0d0 !just testing
+          s%forces(iatom)%vna_ontopof = 0.0d0 !just testing
           s%forces(iatom)%vxc = 0.0d0
           s%forces(iatom)%vnl = 0.0d0
           s%forces(iatom)%ewald = 0.0d0
@@ -176,7 +178,9 @@
         integer imu, inu             !< counter over MEs
 
         real sumT
-
+        real, dimension(3) :: vna                     !just for testing
+        real, dimension(3) :: vna_ontop                     !just for testing
+        real, dimension(3) :: kin                     !just for testing
         type(T_forces), pointer :: pfi
         type(T_forces), pointer :: pfj
 
@@ -233,9 +237,9 @@
           pewaldlr=>s%ewaldlr(iatom)
 
 ! allocate force terms and initialize to zero
-          allocate (pfi%vna_atom (3, num_neigh)); pfi%vna_atom = 0.0d0
-          allocate (pfi%vxc_off_site (3, num_neigh)); pfi%vxc_off_site = 0.0d0
-          allocate (pfi%vxc_on_site (3, num_neigh)); pfi%vxc_on_site = 0.0d0
+          !allocate (pfi%vna_atom (3, num_neigh)); pfi%vna_atom = 0.0d0
+          !allocate (pfi%vxc_off_site (3, num_neigh)); pfi%vxc_off_site = 0.0d0
+          !allocate (pfi%vxc_on_site (3, num_neigh)); pfi%vxc_on_site = 0.0d0
           allocate (pfi%ewaldsr (3, num_neigh)); pfi%ewaldsr = 0.0d0
           allocate (pfi%ewaldlr (3, num_neigh)); pfi%ewaldlr = 0.0d0
 
@@ -322,11 +326,11 @@
 
 ! Now loop over all neighbors ineigh of iatom.
           pvxc_neighbors=>pvxc%neighbors(matom)
-          do ineigh = 1, num_neigh            
+          do ineigh = 1, num_neigh
             do inu = 1, norb_mu
               do imu = 1, norb_mu
-                pfi%vxc_on_site(:,ineigh) = pfi%vxc_on_site(:,ineigh)        &     
-     &           - pRho_neighbors_matom%block(imu,inu)*pvxc_neighbors%Dblock(:,imu,inu)
+     !           pfi%vxc_on_site(:,ineigh) = pfi%vxc_on_site(:,ineigh)        &
+     !&           - pRho_neighbors_matom%block(imu,inu)*pvxc_neighbors%Dblock(:,imu,inu)
               end do
             end do
           end do ! end loop over neighbors
@@ -365,8 +369,8 @@
             else
               do inu = 1, norb_nu
                 do imu = 1, norb_mu
-                  pfi%vxc_off_site(:,ineigh) = pfi%vxc_off_site(:,ineigh)    &
-     &             - pRho_neighbors%block(imu,inu)*pvxc_neighbors%Dblocko(:,imu,inu)
+     !             pfi%vxc_off_site(:,ineigh) = pfi%vxc_off_site(:,ineigh)    &
+     !&             - pRho_neighbors%block(imu,inu)*pvxc_neighbors%Dblocko(:,imu,inu)
                 end do
               end do
             end if
@@ -410,8 +414,8 @@
 ! short-range part ewaldsr
               do inu = 1, norb_nu
                 do imu = 1, norb_mu
-                  pfi%ewaldsr(:,ineigh) = pfi%ewaldsr(:,ineigh)              &
-     &             - 0.5d0*pRho_neighbors%block(imu,inu)*pSR_neighbors%Dblock(:,imu,inu)
+!                  pfi%ewaldsr(:,ineigh) = pfi%ewaldsr(:,ineigh)              &
+!     &             - 0.5d0*pRho_neighbors%block(imu,inu)*pSR_neighbors%Dblock(:,imu,inu)
 ! Note - remove the 0.5d0 and make sure it gets into the Dassembler - I add it here
 ! because the 0.5d0 was here in the original assemble_F.f90 routine.
                 end do
@@ -420,8 +424,8 @@
 ! long-range part ewaldsr
               do inu = 1, norb_nu
                 do imu = 1, norb_mu
-                  pfi%ewaldlr(:,ineigh) = pfi%ewaldlr(:,ineigh)              &
-     &             - pRho_neighbors%block(imu,inu)*pLR_neighbors%Dblock(:,imu,inu)
+!                  pfi%ewaldlr(:,ineigh) = pfi%ewaldlr(:,ineigh)              &
+!     &             - pRho_neighbors%block(imu,inu)*pLR_neighbors%Dblock(:,imu,inu)
                 end do
               end do
             end if
@@ -434,12 +438,17 @@
 ! loop over atoms in central cell
         do iatom = 1, s%natoms
           ! cut some lengthy notation
+          vna = 0.0d0 ! just testing
+          vna_ontop= 0.0d0
+          kin= 0.0d0
           pfi=>s%forces(iatom)
+
+
 
 ! kinetic contribution to total force
 ! ****************************************************************************
           pfi%ftot = pfi%ftot + pfi%kinetic
-
+          kin= kin + pfi%kinetic
 ! Loop over all neighbors of iatom and add in the neighbor-contributed forces
 ! ****************************************************************************
           num_neigh = s%neighbors(iatom)%neighn
@@ -452,6 +461,14 @@
 ! vna contribution to total force
 ! ****************************************************************************
 ! Hartree forces - atom case
+  !          vna= vna + sqrt(pfi%vna_atom(1,ineigh)**2 &
+  !&         + pfi%vna_atom(2,ineigh)**2 + pfi%vna_atom(3,ineigh)**2)
+            vna= vna + pfi%vna_atom(:,ineigh)
+            vna_ontop= vna_ontop + pfi%vna_ontop(:,ineigh)
+
+            pfi%vna_self = pfi%vna_self + pfi%vna_atom(:,ineigh)
+            pfj%vna_self = pfj%vna_self - pfi%vna_atom(:,ineigh)
+
             pfi%vna = pfi%vna + pfi%vna_atom(:,ineigh)
             pfj%vna = pfj%vna - pfi%vna_atom(:,ineigh)
 
@@ -459,6 +476,10 @@
             pfj%ftot = pfj%ftot - pfi%vna_atom(:,ineigh)
 
 ! Hartree forces - ontop terms
+
+            pfi%vna_ontopof = pfi%vna_ontopof + pfi%vna_ontop(:,ineigh)
+            pfj%vna_ontopof = pfj%vna_ontopof - pfi%vna_ontop(:,ineigh)
+
             pfi%vna = pfi%vna + pfi%vna_ontop(:,ineigh)
             pfj%vna = pfj%vna - pfi%vna_ontop(:,ineigh)
 
@@ -497,6 +518,16 @@
             pfi%ftot = pfi%ftot - pfi%ewaldlr(:,ineigh)
             pfj%ftot = pfj%ftot + pfi%ewaldlr(:,ineigh)
           end do ! end loop over neighbors
+          print *, '*******************'
+          print *, 'vav', iatom, vna(1), vna(2), vna(3)
+          write(*, 501) 'vav', iatom, vna
+          print *, 'f_vna_atom', iatom, sqrt(vna(1)**2 &
+  &         + vna(2)**2 + vna(3)**2)
+          print *, 'f_vna_ontop', iatom, sqrt(vna_ontop(1)**2 &
+  &         + vna_ontop(2)**2 + vna_ontop(3)**2)
+          print *, 'f_kin', iatom, sqrt(kin(1)**2 &
+  &         + kin(2)**2 + kin(3)**2)
+          print *, '*******************'
         end do ! end loop over atoms
 
 ! Vnl contribution to total force
@@ -653,7 +684,7 @@
 ! Format Statements
 ! ===========================================================================
 ! None
-
+501     format (A, I2, 3(2x,F10.3))
 ! End Subroutine
 ! ===========================================================================
         return
@@ -730,6 +761,28 @@
         write (logfile,100)
 
         write (logfile,*)
+        write (logfile,103) 'The Hartree (vna) self: '
+        write (logfile,100)
+        write (logfile,101)
+        write (logfile,100)
+        do iatom = 1, s%natoms
+          write (logfile,102) 'f_vna_self', iatom, s%atom(iatom)%species%symbol,&
+     &                                           s%forces(iatom)%vna_self
+        end do
+        write (logfile,100)
+
+        write (logfile,*)
+        write (logfile,103) 'The Hartree (vna) on_top_of: '
+        write (logfile,100)
+        write (logfile,101)
+        write (logfile,100)
+        do iatom = 1, s%natoms
+          write (logfile,102) 'f_vna_on_top_of', iatom, s%atom(iatom)%species%symbol,&
+     &                                           s%forces(iatom)%vna_ontopof
+        end do
+        write (logfile,100)
+
+        write (logfile,*)
         write (logfile,103) 'The Hartree (vna) three-center force: '
         write (logfile,100)
         write (logfile,101)
@@ -756,7 +809,7 @@
         write (logfile,100)
         write (logfile,*)
         write (logfile,103) 'The exchange correlation (vxc) two-center force: '
-        write (logfile,100)  
+        write (logfile,100)
         write (logfile,101)
         write (logfile,100)
         do iatom = 1, s%natoms
@@ -824,7 +877,7 @@
      &                                          s%forces(iatom)%pulay
         end do
         write (logfile,100)
-        
+
 ! Deallocate Arrays
 ! ===========================================================================
 ! None
@@ -836,7 +889,7 @@
      &              ' x ', 9x, ' y ', 9x, ' z ')
 102     format (4x, A,  i5, 7x, a2, 3(2x,ES10.3))
 103     format (4x, A)
-
+500     format (A, I2, 3(2x,ES10.3))
 
 ! End Subroutine
 ! ===========================================================================

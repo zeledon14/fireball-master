@@ -179,6 +179,12 @@
               sighat = (r2 - r1)/z
             end if
             call epsilon_function (r2, sighat, eps)
+            !print *, 'z', z
+            !print *, 'iatom_', 'ineigh'
+            !print *, iatom, ineigh
+            !print *, '*****************************'
+            !print *, 'eps_S_D->', eps
+            !print *, '*****************************'
             call Depsilon_2c (r1, r2, eps, deps)
 
 ! Get the matrix from the data files - which is the matrix in molecular
@@ -363,6 +369,7 @@
 ! Find r21 = vector pointing from r1 to r2, the two ends of the bondcharge.
 ! This gives us the distance dbc (or y value in the 2D grid).
             z = distance (r1, r2)
+
             ! unit vector in sigma direction.
             if (z .lt. 1.0d-05) then
               sighat(1) = 0.0d0
@@ -372,6 +379,12 @@
               sighat = (r2 - r1)/z
             end if
             call epsilon_function (r2, sighat, eps)
+            !print *, 'z', z
+            !print *, 'iatom_', 'ineigh'
+            !print *, iatom, ineigh
+            !print *, '*****************************'
+            !print *, 'eps_T_D->', eps
+            !print *, '*****************************'
             call Depsilon_2c (r1, r2, eps, deps)
 
 ! Get the matrix from the data files - which is the matrix in molecular
@@ -551,7 +564,7 @@
         integer interaction, isorp      !< which interaction and subtype
         integer num_neigh               !< number of neighbors
         integer mbeta                   !< the cell containing neighbor of iatom
-
+        integer ix        !just testing
         integer norb_mu, norb_nu        !< size of the block for the pair
 
         real z                          !< distance between r1 and r2
@@ -584,6 +597,11 @@
         ! density matrix stuff
         type(T_assemble_neighbors), pointer :: pdenmat
         type(T_assemble_block), pointer :: pRho_neighbors
+        type(T_assemble_block), pointer :: pRho_neighbors_matom
+!just for testing
+        type(T_assemble_block), pointer :: poverlap_neighbors
+        type(T_assemble_neighbors), pointer :: poverlap
+
 
         type(T_forces), pointer :: pfi
 
@@ -611,7 +629,7 @@
           ! cut some lengthy notation
           pvna=>s%vna(iatom)
           pdenmat=>s%denmat(iatom)
-          pRho_neighbors_matom=>pdenmat%neighbors(matomh)
+          pRho_neighbors_matom=>pdenmat%neighbors(matom)
           pfi=>s%forces(iatom)
 
 ! Loop over the neighbors of each iatom.
@@ -675,7 +693,7 @@
               isorp = 0
               interaction = P_vna_ontopL
               in3 = in2
-
+!              print *, 'P_vna_ontopL', P_vna_ontopL
 ! bcnam = Hartree matrix in molecular coordinates
 ! dbcnam = derivative of Hartree matrix in molecular coordinates
 ! vdbcnam = vectorized derivative of Hartree matrix in molecular coordinates
@@ -686,7 +704,10 @@
               allocate (vdbcnax (3, norb_mu, norb_nu)); vdbcnax = 0.0d0
               call getDMEs_Fdata_2c (in1, in2, interaction, isorp, z,         &
      &                               norb_mu, norb_nu, bcnam, dbcnam)
-
+!              if (iatom .eq. 1 .and. ineigh .eq. 2) then
+!                print *, 'norb_mu', norb_mu
+!                print *, 'norb_nu', norb_nu
+!              end if
 ! Note that if we are calculating the on-site matrix elements, then the
 ! derivatives should be exactly zero.  This is what Otto referred to as the
 ! ferbie test.  For example, for the on-site overlap, we get an identity
@@ -703,10 +724,26 @@
      &                      vdbcnam, vdbcnax)
 
 ! Notice the explicit negative sign, this makes it force like.
+              !print *, 'vna_ontop'
+              !print *, 'r1', r1
+              !print *, 'r2', r2
+              !print *, 'z', z
               do inu = 1, norb_nu
                 do imu = 1, norb_mu
                   pfi%vna_ontop(:,ineigh) = pfi%vna_ontop(:,ineigh)          &
      &             - pRho_neighbors%block(imu,inu)*vdbcnax(:,imu,inu)*P_eq2
+     !&             - pRho_neighbors%block(imu,inu)
+                  !print *, 'iatom_', 'ineigh_', 'imu_', 'inu'
+                  !print *, iatom, ineigh, imu, inu
+                  !print *, '********************************'
+                  !print *, 'rho_ineigh_iatom'
+                  !print *, pRho_neighbors%block(imu,inu)
+                  !print *, '*****************************'
+                  !print *, 'bcnapx_ontop'
+                  do ix = 1, 3
+                    !print *, vdbcnax(ix,imu,inu)
+                  end do
+                  !print *, '*****************************'
                 end do
               end do
 
@@ -749,6 +786,7 @@
                 do imu = 1, norb_mu
                   pfi%vna_ontop(:,ineigh) = pfi%vna_ontop(:,ineigh)          &
      &             - pRho_neighbors%block(imu,inu)*vdbcnax(:,imu,inu)*P_eq2
+     !&             - pRho_neighbors%block(imu,inu)
                 end do
               end do
 
@@ -772,13 +810,18 @@
 ! Loop over the atoms in the central cell.
 ! Loop over the atoms in the central cell.
         do iatom = 1, s%natoms
+          matom = s%neigh_self(iatom)
           r1 = s%atom(iatom)%ratom
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
 
           ! cut some lengthy notation
           pvna=>s%vna(iatom)
-
+          pdenmat=>s%denmat(iatom)
+          pRho_neighbors_matom=>pdenmat%neighbors(matom)
+          pfi=>s%forces(iatom)
+          poverlap=>s%overlap(iatom)
+          poverlap_neighbors=>poverlap%neighbors(matom)
 ! Loop over the neighbors of each iatom.
           num_neigh = s%neighbors(iatom)%neighn
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
@@ -789,7 +832,7 @@
 
             ! cut some more lengthy notation
             pvna_neighbors=>pvna%neighbors(ineigh)
-
+            poverlap_neighbors=>s%overlap(iatom)%neighbors(ineigh)
 ! SET-UP STUFF
 ! ****************************************************************************
 ! Find r21 = vector pointing from r1 to r2, the two ends of the bondcharge.
@@ -818,6 +861,7 @@
 ! Do nothing here - special case. Interaction already calculated in atm case.
             isorp = 0
             interaction = P_vna_atom
+
             in3 = in1
 
 ! Allocate block size
@@ -831,10 +875,16 @@
             allocate (dbcnam (norb_mu, norb_nu)); dbcnam = 0.0d0
             allocate (vdbcnam (3, norb_mu, norb_nu)); vdbcnam = 0.0d0
             allocate (vdbcnax (3, norb_mu, norb_nu)); vdbcnax = 0.0d0
-
+            !print *, '*****************************'
+            !print *, 'iatom->', iatom
+            !print *, 'ineigh->', ineigh
+            !print *, 'P_vna_atom->', P_vna_atom
             call getDMEs_Fdata_2c (in1, in2, interaction, isorp, z,          &
      &                             norb_mu, norb_nu, bcnam, dbcnam)
-
+!            if (iatom .eq. 1 .and. ineigh .eq. 2) then
+!              print *, 'norb_mu', norb_mu
+!              print *, 'norb_nu', norb_nu
+!            end if
 ! Note that if we are calculating the on-site matrix elements, then the
 ! derivatives should be exactly zero.  This is what Otto referred to as the
 ! ferbie test.  For example, for the on-site overlap, we get an identity
@@ -846,16 +896,60 @@
                 if (z .gt. 1.0d-3) vdbcnam(:,imu,inu) = - eta(:)*dbcnam(imu,inu)
               end do
             end do
-
+            !print *, 'begin'
+            !print *, 'r1', r1
+            !print *, 'r2', r2
+            !print *, 'z', z
+            !print *, 'iatom_', 'ineigh'
+            !print *, iatom, ineigh
+            !print *, '*****************************'
+            !print *, 'eps->', eps
+            !print *, '*****************************'
+            !print *, 'deps->', deps
+            !print *, '*****************************'
             call Drotate (in1, in3, eps, deps, norb_mu, norb_nu, bcnam,      &
      &                    vdbcnam, vdbcnax)
-!           pvna_neighbors%Dblock = pvna_neighbors%Dblock + vdbcnax*P_eq2
-            
+            !print *, 'end'
+            !print *, 'r1', r1
+            !print *, 'r2', r2
+            !print *, 'z', z
+            !print *, 'iatom_', 'ineigh'
+            !print *, iatom, ineigh
+            !print *, 'before_rotation'
+            !print *, dbcnam
+            !print *, '***********************************'
+            !if (iatom .eq. jatom .and. mbeta .eq. 0) then
+            !  print *, 'dbcnam', dbcnam
+            !  print *, 'vdbcnam', vdbcnam
+            !  print *, 'vdbcnax', vdbcnax
+            !  print *, ''
+            !end if
+!           pvna_neighbors%Dblock = pvna_neighbors%Dblock + vdbcnax*P_eq2           
 ! Notice the explicit negative sign, this makes it force like.
+            print *, 'vna_atom'
+            !print *, 'r1', r1
+            !print *, 'r2', r2
+            print *, 'z', z
+            !print *, 'after_rotation'
             do inu = 1, norb_mu
               do imu = 1, norb_mu
                 pfi%vna_atom(:,ineigh) = pfi%vna_atom(:,ineigh)              &
       &           - pRho_neighbors_matom%block(imu,inu)*vdbcnax(:,imu,inu)*P_eq2
+
+               ! pfi%vna_atom(:,ineigh) = pfi%vna_atom(:,ineigh)              &
+      !&           - pRho_neighbors_matom%block(imu,inu)*poverlap_neighbors%Dblock(:,imu,inu)*P_eq2
+                print *, 'iatom_', 'ineigh_', 'imu_', 'inu'
+                print *, iatom, ineigh, imu, inu
+                print *, '********************************'
+                print *, 'rho_matom'
+                print *, pRho_neighbors_matom%block(imu,inu)
+                !print *, 'Dassemb_bcnax->', bcnam(imu,inu)
+                print *, '*****************************'
+               ! print *, 'bcnapx_atom'
+                do ix = 1, 3
+                  print *, vdbcnax(ix,imu,inu)
+                end do
+                !print *, '*****************************'
                end do
             end do
             deallocate (bcnam, dbcnam, vdbcnam, vdbcnax)

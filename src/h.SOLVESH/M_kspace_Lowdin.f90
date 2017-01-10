@@ -225,8 +225,8 @@
 
             pH_neighbors%block = pK_neighbors%blocko + pvna_neighbors%block  &
         &                       + pvna_neighbors%blocko                      &
-        &                       + pvxc_neighbors%block - pSR_neighbors%block &
-        &                       + pLR_neighbors%block
+        &                       + pvxc_neighbors%block !- pSR_neighbors%block &
+        !&                       + pLR_neighbors%block
           end do
         end do
 
@@ -344,7 +344,7 @@
         do iatom = 1, s%natoms
           in1 = s%atom(iatom)%imass
           r1 = s%atom(iatom)%ratom
-          write (logfile,*) 
+          write (logfile,*)
           num_neigh = s%neighbors(iatom)%neighn
           write (logfile,'(A, I5, A, I5, A1)') '### Atom:',  iatom, '  (Neighbors:', num_neigh,')'
 
@@ -379,10 +379,10 @@
             write (logfile,102) ineigh, jatom, mbeta, z
 
 ! Overlap matrix elements
-            write (logfile,*) 
+            write (logfile,*)
             write (logfile,'(4x,A)') 'Interactions: s, t, vna, rho, and vxc '
             write (logfile,'(4x,A)') '===================================== '
-            write (logfile,*) 
+            write (logfile,*)
             write (logfile,'(4x,A)') 's: overlap '
             write (logfile,'(4x,A)') '---------- '
             ! cut some more lengthy notation
@@ -395,7 +395,7 @@
             end do
 
 ! Kinetic energy matrix elements
-            write (logfile,*) 
+            write (logfile,*)
             write (logfile,'(4x,A)') 't: kinetic '
             write (logfile,'(4x,A)') '---------- '
             ! cut some more lengthy notation
@@ -404,7 +404,7 @@
             norb_nu = species(in2)%norb_max
             do imu = 1, norb_mu
               write (logfile,104)                                            &
-     &         (pK_neighbors%block(imu,inu), inu = 1, norb_nu)
+     &         (pK_neighbors%blocko(imu,inu), inu = 1, norb_nu)
             end do
 
 ! Neutral atom matrix elements
@@ -496,7 +496,7 @@
             norb_nu = species(in2)%norb_max
             do imu = 1, norb_mu
               write (logfile,104)                                            &
-     &         (pSR_neighbors%block(imu,inu), inu = 1, norb_nu)
+     &         (pSR_neighbors%blocko(imu,inu), inu = 1, norb_nu)
             end do
 
 ! Long-range ewald matrix elements
@@ -509,7 +509,7 @@
             norb_nu = species(in2)%norb_max
             do imu = 1, norb_mu
               write (logfile,104)                                            &
-     &         (pLR_neighbors%block(imu,inu), inu = 1, norb_nu)
+     &         (pLR_neighbors%blocko(imu,inu), inu = 1, norb_nu)
             end do
 
 ! Complete Hamiltonian (without vnl) matrix elements

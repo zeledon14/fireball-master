@@ -462,20 +462,20 @@
 ! loop over orbitals in the ineigh-shell (inu)
                      do m2 = -l2, l2
                        inu = n2 + m2
-                       mxca(:,imu,inu) = mxca(:,imu,inu)                     &
-             &          - rhop_a*d2muxc_in*(prho_in_neighbors%block(imu,inu) &
-             &          - prhoS_in_neighbors%block(issh,jssh)*poverlap_neighbors%block(imu,inu)) &
-             &          - dmuxc_in*rhoxa(:,imu,inu)
+             !          mxca(:,imu,inu) = mxca(:,imu,inu)                     &
+             !&          - rhop_a*d2muxc_in*(prho_in_neighbors%block(imu,inu) &
+             !&          - prhoS_in_neighbors%block(issh,jssh)*poverlap_neighbors%block(imu,inu)) &
+             !&          - dmuxc_in*rhoxa(:,imu,inu)
              
-                       mxcb(:,imu,inu) = mxcb(:,imu,inu)                     &
-             &          - rhop_b*d2muxc_in*(prho_in_neighbors%block(imu,inu) &
-             &          - prhoS_in_neighbors%block(issh,jssh)*poverlap_neighbors%block(imu,inu)) &
-             &          - dmuxc_in*rhoxb(:,imu,inu)
+             !          mxcb(:,imu,inu) = mxcb(:,imu,inu)                     &
+             !&          - rhop_b*d2muxc_in*(prho_in_neighbors%block(imu,inu) &
+             !&          - prhoS_in_neighbors%block(issh,jssh)*poverlap_neighbors%block(imu,inu)) &
+             !&          - dmuxc_in*rhoxb(:,imu,inu)
              
-                       mxcc(:,imu,inu) = mxcc(:,imu,inu)                     &
-             &          - rhop_c*d2muxc_in*(prho_in_neighbors%block(imu,inu) &
-             &          - prhoS_in_neighbors%block(issh,jssh)*poverlap_neighbors%block(imu,inu)) &
-             &          - dmuxc_in*rhoxc(:,imu,inu)
+             !          mxcc(:,imu,inu) = mxcc(:,imu,inu)                     &
+             !&          - rhop_c*d2muxc_in*(prho_in_neighbors%block(imu,inu) &
+             !&          - prhoS_in_neighbors%block(issh,jssh)*poverlap_neighbors%block(imu,inu)) &
+             !&          - dmuxc_in*rhoxc(:,imu,inu)
                      end do !** m2 = -l2, l2
                    end do !** m1 = -l1, l1
                    n2 = n2 + l2

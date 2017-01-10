@@ -55,8 +55,8 @@
          use M_Fdata_2c
          use M_Fdata_3c
          use M_rotations
-         use M_Drotations 
-        
+         use M_Drotations
+
 ! Type Declaration
 ! ===========================================================================
 ! None
@@ -188,7 +188,7 @@
             if (z .lt. 1.0d-05) then
               sighat(1) = 0.0d0
               sighat(2) = 0.0d0
-              sighat(3) = 1.0d0              
+              sighat(3) = 1.0d0
             else
               sighat = (r2 - r1)/z
             end if
@@ -204,7 +204,7 @@
 ! If r1 .ne. r2, then this is a case where the potential is located at one of
 ! the sites of a wavefunction (ontop case).
             if (iatom .eq. jatom .and. mbeta .eq. 0) then
-               
+
 ! Do nothing here - special case. Interaction already calculated in atm case.
 
             else
@@ -234,13 +234,13 @@
               allocate (dbcxcm (norb_mu, norb_nu)); dbcxcm = 0.0d0
               allocate (vdbcxcm (3, norb_mu, norb_nu)); vdbcxcm = 0.0d0
               allocate (vdbcxcx (3, norb_mu, norb_nu)); vdbcxcx = 0.0d0
-             
+
               do isubtype = 1, species(in1)%nssh
                 Qneutral = species(in1)%shell(isubtype)%Qneutral
-                
+
                 call getDMEs_Fdata_2c (in1, in3, interaction, isubtype, z,   &
      &                                 norb_mu, norb_nu, bcxcm, dbcxcm)
-                            
+
 ! Note that if we are calculating the on-site matrix elements, then the
 ! derivatives should be exactly zero.  This is what Otto referred to as the
 ! ferbie test.  For example, for the on-site overlap, we get an identity
@@ -252,12 +252,13 @@
                     if (z .gt. 1.0d-3) vdbcxcm(:,imu,inu) = - eta(:)*dbcxcm(imu,inu)
                   end do
                 end do
-                
+
                 call Drotate (in1, in3, eps, deps, norb_mu, norb_nu, bcxcm,  &
      &                        vdbcxcm, vdbcxcx)
 
                 prho_in_neighbors%Dblock =                                   &
      &            prho_in_neighbors%Dblock + vdbcxcx*Qneutral
+
                 prho_bond_neighbors%Dblock =                                 &
      &            prho_bond_neighbors%Dblock + vdbcxcx*Qneutral
               end do
@@ -303,8 +304,8 @@
           norb_mu = species(in1)%norb_max
 
           ! cut some lengthy notation
-          prho_in=>s%rho_in(iatom); prho_in_neighbors=>prho_in%neighbors(matom)
-          prho_bond=>s%rho_bond(iatom); prho_bond_neighbors=>prho_bond%neighbors(matom)
+          prho_in=>s%rho_in(iatom)
+          prho_bond=>s%rho_bond(iatom)
 
 ! Loop over the neighbors of each iatom.
           num_neigh = s%neighbors(iatom)%neighn
@@ -313,6 +314,12 @@
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
+            prho_bond_neighbors=>prho_bond%neighbors(ineigh)
+            prho_in_neighbors=>prho_in%neighbors(ineigh)
+            allocate(prho_bond_neighbors%Dblocka(3, norb_mu, norb_mu))
+            allocate(prho_in_neighbors%Dblocka(3, norb_mu, norb_mu))
+            prho_bond_neighbors%Dblocka= 0.0d0
+            prho_in_neighbors%Dblocka= 0.0d0
 
 ! SET-UP STUFF
 ! *************************************************************************
@@ -338,7 +345,7 @@
 ! one center case : calculate both rho_in and rho_bond
               interaction = P_rho_atom
               in3 = in1
-              
+
 ! bcxcm = density matrix in molecular coordinates
 ! bcxcx = density matrix in crystal coordinates
 ! dbcxcm = derivative of density matrix in molecular coordinates
@@ -366,10 +373,10 @@
                 call Drotate (in1, in3, eps, deps, norb_mu, norb_nu, bcxcm,  &
      &                        vdbcxcm, vdbcxcx)
 
-                prho_in_neighbors%Dblock =                                   &
-     &            prho_in_neighbors%Dblock + vdbcxcx*Qneutral
-                prho_bond_neighbors%Dblock =                                 &
-     &            prho_bond_neighbors%Dblock + vdbcxcx*Qneutral
+                prho_in_neighbors%Dblocka =                                   &
+     &            prho_in_neighbors%Dblocka + vdbcxcx*Qneutral
+                prho_bond_neighbors%Dblocka =                                 &
+     &            prho_bond_neighbors%Dblocka + vdbcxcx*Qneutral
               end do
               deallocate (bcxcm, bcxcx, dbcxcm, vdbcxcm, vdbcxcx)
             else
@@ -380,7 +387,7 @@
 ! coordinates.
               interaction = P_rho_atom
               in3 = in1
-                
+
 ! bcxcm = density matrix in molecular coordinates
 ! bcxcx = density matrix in crystal coordinates
 ! dbcxcm = derivative of density matrix in molecular coordinates
@@ -409,8 +416,8 @@
                 call Drotate (in1, in3, eps, deps, norb_mu, norb_nu, bcxcm,  &
      &                        vdbcxcm, vdbcxcx)
 
-                prho_in_neighbors%Dblock =                                   &
-     &            prho_in_neighbors%Dblock + vdbcxcx*Qneutral
+                prho_in_neighbors%Dblocka =                                   &
+     &            prho_in_neighbors%Dblocka + vdbcxcx*Qneutral
               end do
               deallocate (bcxcm, bcxcx, dbcxcm, vdbcxcm, vdbcxcx)
             end if
@@ -478,17 +485,17 @@
         integer num_neigh                !< number of neighbors
         integer matom                    !< matom is the self-interaction atom
         integer mbeta                    !< cell containing neighbor of iatom
-          
+
         integer norb_mu, norb_nu        !< size of the block for the pair
         integer nssh_i, nssh_j         !< size of the block for the pair
 
         real z                           !< distance between r1 and r2
         real Qneutral
-        
+
         real, dimension (3) :: eta        !< vector part of epsilon eps(:,3)
         real, dimension (3, 3) :: eps     !< the epsilon matrix
         real, dimension (3) :: r1, r2    !< positions of iatom and jatom
-        real, dimension (3) :: sighat     !< unit vector along r2 - r1  
+        real, dimension (3) :: sighat     !< unit vector along r2 - r1
 
 ! bcxcm = density matrix in molecular coordinates
 ! bcxcx = density matrix in crystal coordinates
@@ -598,7 +605,7 @@
      &                                 nssh_i, nssh_j, bcxcm, dbcxcm)
 
 ! Note the minus sign. d/dr1 = - eta * d/dd.
-                
+
                 do inu = 1, nssh_j !norb_nu
                   do imu = 1, nssh_i !norb_mu
                     if (z .gt. 1.0d-3) vdbcxcm(:,imu,inu) = - eta(:)*dbcxcm(imu,inu)
@@ -630,6 +637,7 @@
 
                 pWrho_in_neighbors%Dblock =                                  &
      &            pWrho_in_neighbors%Dblock + vdbcxcm*Qneutral
+     !
                 pWrho_bond_neighbors%Dblock =                                &
      &            pWrho_bond_neighbors%Dblock + vdbcxcm*Qneutral
               end do
@@ -654,9 +662,8 @@
 
           ! cut some lengthy notation
           prho_in_weighted=>s%rho_in_weighted(iatom)
-          pWrho_in_neighbors=>prho_in_weighted%neighbors(matom)
           prho_bond_weighted=>s%rho_bond_weighted(iatom)
-          pWrho_bond_neighbors=>prho_bond_weighted%neighbors(matom)
+
 
 ! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
@@ -665,7 +672,12 @@
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             r2 = s%atom(jatom)%ratom + s%xl(mbeta)%a
             in2 = s%atom(jatom)%imass
-
+            pWrho_in_neighbors=>prho_in_weighted%neighbors(ineigh)
+            pWrho_bond_neighbors=>prho_bond_weighted%neighbors(ineigh)
+            allocate(pWrho_in_neighbors%Dblocka(3, nssh_i, nssh_i))
+            allocate(pWrho_bond_neighbors%Dblocka(3, nssh_i, nssh_i))
+            pWrho_in_neighbors%Dblocka = 0.0d0
+            pWrho_bond_neighbors%Dblocka = 0.0d0
 ! Calculate the distance between the two centers.
             z = distance (r1, r2)
             ! unit vector in sigma direction.
@@ -700,16 +712,17 @@
      &                                 nssh_i, nssh_i, bcxcm, dbcxcm)
 
 ! Note the minus sign. d/dr1 = - eta * d/dd.
-                do inu = 1, norb_nu
-                  do imu = 1, norb_mu
+                do inu = 1, nssh_i !norb_nu
+                  do imu = 1, nssh_i !norb_mu
                     if (z .gt. 1.0d-3) vdbcxcm(:,imu,inu) = - eta(:)*dbcxcm(imu,inu)
                   end do
                 end do
 
-                pWrho_in_neighbors%Dblock =                                  &
-     &            pWrho_in_neighbors%Dblock + vdbcxcm*Qneutral
-                pWrho_bond_neighbors%Dblock =                                &
-     &            pWrho_bond_neighbors%Dblock + vdbcxcm*Qneutral
+                pWrho_in_neighbors%Dblocka =                                  &
+     &            pWrho_in_neighbors%Dblocka + vdbcxcm*Qneutral
+                pWrho_bond_neighbors%Dblocka =                                &
+     &            pWrho_bond_neighbors%Dblocka + vdbcxcm*Qneutral
+
               end do
               deallocate (bcxcm, dbcxcm, vdbcxcm)
             else
@@ -732,14 +745,14 @@
      &                                 nssh_i, nssh_i, bcxcm, dbcxcm)
 
 ! Note the minus sign. d/dr1 = - eta * d/dd.
-                do inu = 1, nssh_j !norb_nu
+                do inu = 1, nssh_i !norb_nu
                   do imu = 1, nssh_i !norb_mu
                     if (z .gt. 1.0d-3) vdbcxcm(:,imu,inu) = - eta(:)*dbcxcm(imu,inu)
                   end do
                 end do
 
-                pWrho_in_neighbors%Dblock =                                  &
-     &            pWrho_in_neighbors%Dblock + vdbcxcm*Qneutral
+                pWrho_in_neighbors%Dblocka =                                  &
+     &            pWrho_in_neighbors%Dblocka + vdbcxcm*Qneutral
               end do
               deallocate (bcxcm, dbcxcm, vdbcxcm)
             end if
@@ -752,7 +765,7 @@
 
 ! Format Statements
 ! ===========================================================================
-! None - 
+! None -
 
 ! End Subroutine
 ! ===========================================================================
@@ -796,7 +809,7 @@
 ! Variable Declaration and Description
 ! ===========================================================================
         integer iatom                             !< counter over atoms
-        integer ineigh 
+        integer ineigh
 
 ! Procedure
 ! ===========================================================================

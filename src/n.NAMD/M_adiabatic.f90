@@ -57,7 +57,13 @@
         integer ntransitions
 
 ! module procedures
-        contains
+      contains
+
+        function test
+
+          write(*,*) 'test'
+          
+        end function test
 
 
 ! End Module

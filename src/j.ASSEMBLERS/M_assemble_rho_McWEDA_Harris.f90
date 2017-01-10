@@ -472,8 +472,8 @@
                 call rotate (in1, in2, eps, norb_mu, norb_nu, bcxcm, bcxcx)
 
                 ! Add this piece into the total
-                s%rho_in(iatom)%neighbors(mneigh)%block =                    &
-     &            s%rho_in(iatom)%neighbors(mneigh)%block + bcxcx*Qneutral
+     !           s%rho_in(iatom)%neighbors(mneigh)%block =                    &
+     !&            s%rho_in(iatom)%neighbors(mneigh)%block + bcxcx*Qneutral
               end do
               deallocate (bcxcm)
               deallocate (bcxcx)

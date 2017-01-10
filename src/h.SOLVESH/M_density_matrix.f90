@@ -185,14 +185,14 @@
         if (iwriteout_cdcoeffs .eq. 1) then
           slogfile = s%basisfile(:len(trim(s%basisfile)) - 4)
           slogfile = trim(slogfile)//'.cdcoeffs'
-          open (unit = 22, file = slogfile, status = 'replace', form = 'unformatted')
-
+          !open (unit = 22, file = slogfile, status = 'replace', form = 'unformatted')
+          open (unit = 22, file = slogfile, status = 'replace')
           do ikpoint = 1, s%nkpoints
             do iband = 1, s%norbitals_new
-              write (22) iband
+              write (22,*) iband
 
 ! write out the coefficient
-              write (22) (s%kpoints(ikpoint)%c(inu,iband), inu = 1, s%norbitals_new)
+              write (22,*) (s%kpoints(ikpoint)%c(inu,iband), inu = 1, s%norbitals_new)
             end do
           end do
           close (unit = 22)
@@ -224,6 +224,7 @@
             pRho_neighbors%block = 0.0d0
 
 ! Loop over the special k points.
+            !print *, 'num_k_points', s%nkpoints
             do ikpoint = 1, s%nkpoints
 
               ! Find the phase which is based on k*r
@@ -233,7 +234,9 @@
               phasex = cmplx(cos(dot),sin(dot))*s%kpoints(ikpoint)%weight*P_spin
 
 ! Loop over all bands
+              !print *, 'numb_of_orbitals', s%norbitals_new
               do iband = 1, s%norbitals_new
+              !print *, 'iband->', iband
                 if (s%kpoints(ikpoint)%ioccupy(iband) .ne. 0) then
                   phase = phasex*s%kpoints(ikpoint)%foccupy(iband)
                   do imu = 1, norb_mu
@@ -880,7 +883,7 @@
           write (22,*)
           write (22,101)
           num_neigh = s%neighbors(iatom)%neighn
-          write (22,*) ' There are ', num_neigh, ' neighbors to atom ', iatom
+          write (22,*) '#There are ', num_neigh, ' neighbors to atom ', iatom
           write (22,101)
 
           ! cut some lengthy notation
@@ -915,10 +918,10 @@
 
 ! Format Statements
 ! ===========================================================================
-101     format (75('*'))
-102     format (1x, ' Matrices connected to neighbor ', i3, ','              &
+101     format (75('#'))
+102     format (1x, '#Matrices connected to neighbor ', i3, ','              &
      &          ' jatom = ', i4, ', ', ' mbeta = ', i4, ', ', ' d = ', f6.3)
-103     format (75('='))
+103     format (75('#'))
 104     format (9f8.3)
 
 ! End Subroutine

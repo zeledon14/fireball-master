@@ -166,7 +166,12 @@
               sighat = (r2 - r1)/z
             end if
             call epsilon_function (r2, sighat, eps)
-
+            !print *, 'z', z
+            !print *, 'iatom_', 'ineigh'
+            !print *, iatom, ineigh
+            !print *, '*****************************'
+            !print *, 'eps_S_A->', eps
+            !print *, '*****************************'
 ! Get the matrix from the data files - which is the matrix in molecular
 ! coordinates (stored in sm). Rotate the matrix into crystal coordinates.
 ! The rotated  matrix elements are stored in sx, where x means crytal
@@ -242,7 +247,7 @@
         integer interaction, isorp    !< which interaction and subtype
         integer num_neigh                !< number of neighbors
         integer mbeta                    !< the cell containing iatom's neighbor
-
+        integer imu, inu
         integer norb_mu, norb_nu         !< size of the block for the pair
 
         real z                           !< distance between r1 and r2
@@ -310,7 +315,12 @@
               sighat = (r2 - r1)/z
             end if
             call epsilon_function (r2, sighat, eps)
-
+            !print *, 'z', z
+            !print *, 'iatom_', 'ineigh'
+            !print *, iatom, ineigh
+            !print *, '*****************************'
+            !print *, 'eps_T_A->', eps
+            !print *, '*****************************'
 ! Get the matrix from the data files - which is the matrix in molecular
 ! coordinates (stored in tm). Rotate the matrix into crystal coordinates.
 ! The rotated  matrix elements are stored in tx, where x means crytal
@@ -324,8 +334,14 @@
             call getMEs_Fdata_2c (in1, in2, interaction, isorp, z,           &
      &                            norb_mu, norb_nu, tm)
             call rotate (in1, in3, eps, norb_mu, norb_nu, tm, tx)
-
             pK_neighbors%blocko = tx
+            print *, '#iatom', iatom, 'ineigh', ineigh
+            !print *, '#ineigh', ineigh
+            !if (iatom .eq. 1 .and. ineigh .eq. 2) then
+              do imu = 1, norb_mu
+                write (*,104) (pK_neighbors%blocko(imu,inu), inu = 1, norb_nu)
+              end do
+            !end if
             deallocate (tm, tx)
           end do ! end loop over neighbors
         end do ! end loop over atoms
@@ -335,6 +351,7 @@
 ! None
 
 ! Format Statements
+104     format (9f8.3)
 ! ===========================================================================
 ! None
 
@@ -445,10 +462,11 @@
         integer interaction, isorp      !< which interaction and subtype
         integer num_neigh               !< number of neighbors
         integer mbeta                   !< the cell containing neighbor of iatom
-
+        integer inu, imu
         integer norb_mu, norb_nu        !< size of the block for the pair
 
         real z                          !< distance between r1 and r2
+
 
         real, dimension (3, 3) :: eps   !< the epsilon matrix
         real, dimension (3) :: r1, r2   !< positions of iatom and jatom
@@ -468,6 +486,9 @@
 
         type(T_assemble_block), pointer :: pvna_neighbors
         type(T_assemble_neighbors), pointer :: pvna
+        !just testing
+        type(T_assemble_block), pointer :: poverlap_neighbors
+        type(T_assemble_neighbors), pointer :: poverlap
 
 ! Allocate Arrays
 ! ===========================================================================
@@ -505,6 +526,7 @@
             allocate (pvna_neighbors%blocko(norb_mu, norb_nu))
             pvna_neighbors%block = 0.0d0
             pvna_neighbors%blocko = 0.0d0
+
 
 ! SET-UP STUFF
 ! ****************************************************************************
@@ -577,7 +599,8 @@
 
           ! cut some more lengthy notation
           pvna=>s%vna(iatom); pvna_neighbors=>pvna%neighbors(matom)
-
+          poverlap=>s%overlap(iatom)
+          poverlap_neighbors=>poverlap%neighbors(matom)
 ! Allocate block size
           allocate (pvna_neighbors%block(norb_mu, norb_mu))
           pvna_neighbors%block = 0.0d0
@@ -603,7 +626,12 @@
               sighat = (r2 - r1)/z
             end if
             call epsilon_function (r2, sighat, eps)
-
+            !print *, 'z', z
+            !print *, 'iatom_', 'ineigh'
+            !print *, iatom, ineigh
+            !print *, '*****************************'
+            !print *, 'eps_vna_atom_A->', eps
+            !print *, '*****************************'
 ! Get the matrix from the data files - which is the matrix in molecular
 ! coordinates (stored in bcnam). Rotate the matrix into crystal coordinates.
 ! The rotated  matrix elements are stored in sx, where x means crytal
@@ -622,6 +650,18 @@
             call rotate (in1, in3, eps, norb_mu, norb_nu, bcnam, bcnax)
 
             pvna_neighbors%block = pvna_neighbors%block + bcnax*P_eq2
+            !pvna_neighbors%block = poverlap_neighbors%block*P_eq2
+            !print *, 'r1', r1
+            !print *, 'r2', r2
+            !print *, 'z', z
+            do inu = 1, norb_mu
+              do imu = 1, norb_mu
+                !print *, 'iatom_', 'ineigh_', 'imu_', 'inu'
+                !print *, iatom, ineigh, imu, inu
+                !print *, 'Assemb_bcnax->', bcnam(imu,inu)
+                !print *, '*****************************'
+              end do
+            end do
             deallocate (bcnam, bcnax)
           end do ! end loop over neighbors
         end do ! end loop over atoms

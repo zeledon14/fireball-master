@@ -122,6 +122,8 @@
           real, dimension (3) :: pulay
 
           real, dimension (3) :: vna
+          real, dimension (3) :: vna_self
+          real, dimension (3) :: vna_ontopof
           ! vna forces - add these together to vna in the end
           real, allocatable :: vna_atom (:, :)  ! atom case
           real, allocatable :: vna_ontop (:, :) ! ontop case
@@ -389,7 +391,7 @@
 ! ===========================================================================
 ! Initialize parameters &OUTPUT
         iwriteout_ME_SandH = 0
-        iwriteout_density = 0
+        iwriteout_density = 1
         iwriteout_cdcoeffs = 0
         iwriteout_charges = 0
         iwriteout_energies = 0

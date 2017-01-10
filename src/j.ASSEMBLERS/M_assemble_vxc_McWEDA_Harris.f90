@@ -52,7 +52,7 @@
 !!
 !!           vxc_bond (mu,nu) = < mu | V_xc (rho_i) | nu >
 !!                            if mu and nu are in the same atom "i"; or
-!!           vxc_bond (mu,nu) = < mu | V_xc(rho_i + rho_j) | nu >
+!!           vxc_bowell actually that parts is just the rhos and as you can see they don't match perfectly maybe the dmux amd d2mux are just nd (mu,nu) = < mu | V_xc(rho_i + rho_j) | nu >
 !!                            if mu and nu are in different atoms "i" and "j"
 !
 ! For a complete list of the interactions see the files 2c.Z1.Z2.dir now
@@ -111,7 +111,7 @@
 
 ! Variable Declaration and Description
 ! ===========================================================================
-        integer iatom, ineigh, matom       !< counter over atoms and neighbors
+        integer iatom, ineigh              !< counter over atoms and neighbors
         integer in1, in2                   !< species numbers
         integer jatom                      !< neighbor of iatom
         integer logfile                    !< writing to which unit
@@ -157,14 +157,13 @@
 ! (3) Sum all three contributions in Eq. (16):
 !  vxc = vxc_bond + vxc_SN - vxc_SN_bond
         do iatom = 1, s%natoms
-
           ! cut some lengthy notation
           pvxc=>s%vxc(iatom)
           in1 = s%atom(iatom)%imass
           norb_mu = species(in1)%norb_max
           num_neigh = s%neighbors(iatom)%neighn
           allocate (pvxc%neighbors(num_neigh))
-            
+
 ! Loop over the neighbors of each iatom.
           do ineigh = 1, num_neigh  ! <==== loop over i's neighbors
             ! cut some more lengthy notation
@@ -172,23 +171,14 @@
             jatom = s%neighbors(iatom)%neigh_j(ineigh)
             in2 = s%atom(jatom)%imass
             norb_nu = species(in2)%norb_max
-            allocate (pvxc_neighbors%blocko(norb_mu, norb_nu))
-            pvxc_neighbors%blocko = 0.0d0
+            allocate (pvxc_neighbors%block(norb_mu, norb_nu))
 
 ! equation (16) PRB 71, 235101 (2005)
 ! vxc = vxc_bond + vxc_SN - vxc_SN_bond
-            pvxc_neighbors%blocko = vxc_SN(iatom)%neighbors(ineigh)%blocko     &
-     &                             + vxc_bond(iatom)%neighbors(ineigh)%blocko  &
-     &                             - vxc_SN_bond(iatom)%neighbors(ineigh)%blocko
+            pvxc_neighbors%block = vxc_SN(iatom)%neighbors(ineigh)%block     &
+     &                            + vxc_bond(iatom)%neighbors(ineigh)%block  &
+     &                            - vxc_SN_bond(iatom)%neighbors(ineigh)%block
           end do
-          matom = s%neigh_self(iatom)
-                    
-          ! cut some lengthy notation
-          pvxc_neighbors=>pvxc%neighbors(matom)
-          allocate (pvxc_neighbors%block(norb_mu, norb_mu))
-          pvxc_neighbors%block = 0.0d0
-          pvxc_neighbors%block = vxc_SN(iatom)%neighbors(matom)%block     &
-     &                          - vxc_SN_bond(iatom)%neighbors(matom)%block
         end do
 
 ! Deallocate Arrays
@@ -370,12 +360,13 @@
                       prho_bond = s%rho_bond(iatom)%neighbors(ineigh)%block(imu,inu)
 
 ! calculate GSN for rho_in
-                      pvxc_SN_neighbors%blocko(imu,inu) = muxc_in*poverlap      &
+!pvxc_SN_neighbors%block(imu,inu) = prho_in
+                      pvxc_SN_neighbors%block(imu,inu) = muxc_in*poverlap      &
      &                  + dmuxc_in*(prho_in - prho_in_shell*poverlap)
                       
 ! calculate GSN for rho_bond ("atomic" correction)
-                      pvxc_SN_bond_neighbors%blocko(imu,inu) =                 &
-     &                  muxc_bond*poverlap                                     &
+     !                  pvxc_SN_bond_neighbors%block(imu,inu) = dmuxc_bond*prho_bond !&
+                      pvxc_SN_bond_neighbors%block(imu,inu) = muxc_bond*poverlap &
      &                  + dmuxc_bond*(prho_bond - prho_bond_shell*poverlap)
                     end do !do m2 = -l2, l2
                   end do !do m1 = -l1, l1
@@ -408,10 +399,6 @@
           pvxc_SN=>vxc_SN(iatom); pvxc_SN_neighbors=>pvxc_SN%neighbors(matom)
           pvxc_SN_bond=>vxc_SN_bond(iatom)
           pvxc_SN_bond_neighbors=>pvxc_SN_bond%neighbors(matom)
-          allocate (pvxc_SN_neighbors%block(norb_mu, norb_mu))
-          allocate (pvxc_SN_bond_neighbors%block(norb_mu, norb_mu))
-          pvxc_SN_neighbors%block = 0.0d0
-          pvxc_SN_bond_neighbors%block = 0.0d0
 
 ! Allocate block size
           norb_nu = species(in1)%norb_max
@@ -444,13 +431,16 @@
 ! loop over orbitals in the iatom-shell (imu)
             do m1 = -l1, l1
               imu = n1 + m1
+
+              poverlap=                                             &
+     &         s%overlap(iatom)%neighbors(matom)%block(imu,imu)
               prho_in = s%rho_in(iatom)%neighbors(matom)%block(imu,imu)
               prho_bond = s%rho_bond(iatom)%neighbors(matom)%block(imu,imu)
 ! calculate GSN for rho_in
-              pvxc_SN_neighbors%block(imu,imu) = muxc_in                     &
+              pvxc_SN_neighbors%block(imu,imu) = muxc_in                      &
      &          + dmuxc_in*(prho_in - prho_in_shell)
-              
-              pvxc_SN_bond_neighbors%block(imu,imu) = muxc_bond              &
+
+              pvxc_SN_bond_neighbors%block(imu,imu) =     muxc_bond             &
      &          + dmuxc_bond*(prho_bond - prho_bond_shell)
             end do
 
@@ -609,8 +599,8 @@
 
 ! Allocate block size
             norb_nu = species(in2)%norb_max
-            allocate (pvxc_bond_neighbors%blocko(norb_mu, norb_nu))
-            pvxc_bond_neighbors%blocko = 0.0d0           
+            allocate (pvxc_bond_neighbors%block(norb_mu, norb_nu))
+            pvxc_bond_neighbors%block = 0.0d0           
 
 ! SET-UP STUFF
 ! ****************************************************************************
@@ -646,7 +636,7 @@
      &                .eq. species(in1)%orbital(inu)%l .and.                &
      &                species(in1)%orbital(imu)%m                           &
      &                .eq. species(in1)%orbital(inu)%m) then
-                   pvxc_bond_neighbors%blocko(imu,inu) = vxc_1c(in1)%V(issh,jssh)
+                   pvxc_bond_neighbors%block(imu,inu) = vxc_1c(in1)%V(issh,jssh)
                   end if
                 end do
               end do
@@ -664,7 +654,7 @@
               call getMEs_Fdata_2c (in1, in3, interaction, isubtype, z,      &
      &                              norb_mu, norb_nu, bcxcm)
               call rotate (in1, in3, eps, norb_mu, norb_nu, bcxcm, bcxcx)
-              pvxc_bond_neighbors%blocko = bcxcx
+              pvxc_bond_neighbors%block = bcxcx
               deallocate (bcxcm)
               deallocate (bcxcx)
             end if ! end if for r1 .eq. r2 case
@@ -727,14 +717,10 @@
 ! ===========================================================================
         do iatom = 1, s%natoms
           do ineigh = 1, s%neighbors(iatom)%neighn
-            deallocate (s%vxc(iatom)%neighbors(ineigh)%blocko)
-            deallocate (vxc_SN(iatom)%neighbors(ineigh)%blocko)
-            deallocate (vxc_SN_bond(iatom)%neighbors(ineigh)%blocko)
+            deallocate (s%vxc(iatom)%neighbors(ineigh)%block)
+            deallocate (vxc_SN(iatom)%neighbors(ineigh)%block)
+            deallocate (vxc_SN_bond(iatom)%neighbors(ineigh)%block)           
           end do
-          matom = s%neigh_self(iatom)
-          deallocate (s%vxc(iatom)%neighbors(matom)%block)
-          deallocate (vxc_SN(iatom)%neighbors(matom)%block)
-          deallocate (vxc_SN_bond(iatom)%neighbors(matom)%block)          
           deallocate (s%vxc(iatom)%neighbors)
           deallocate (vxc_SN(iatom)%neighbors)
           deallocate (vxc_SN_bond(iatom)%neighbors)

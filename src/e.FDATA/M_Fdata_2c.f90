@@ -509,6 +509,11 @@
           do iindex = 1, pFdata_cell%nME
             imu = pFdata_cell%mu_2c(iindex)
             inu = pFdata_cell%nu_2c(iindex)
+            !if (iint .eq. 5) then
+            !  print *, 'pFdata_cell%nME->', pFdata_cell%nME
+            !  print *, 'imu->', imu
+            !  print *, 'inu->', inu
+            !end if
             hmbox(imu,inu) = pFdata_cell%Fdata_2c(1,iindex)
             Dhmbox(imu,inu) = 0.0d0
           end do          

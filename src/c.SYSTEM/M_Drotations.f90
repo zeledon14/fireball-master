@@ -142,7 +142,25 @@
 ! term C Aleft*Aright*dmatrix/dr
         call Dmatrix (in1, in2, norb_mu, norb_nu, matm, dmatm, dmat, pmat,  &
      &                Ddmat, Dpmat, Dmatx)
-
+        !print *, 'in1->', in1
+        !print *, 'in2->', in2
+        !print *, 'norb_mu->', norb_mu
+        !print *, 'norb_nu->', norb_nu
+        !print *, '*****************************'
+        !print *, 'matm->', matm
+        !print *, '*****************************'
+        !print *, 'dmatm->', dmatm
+        !print *, '*****************************'
+        !print *, 'dmat->', dmat
+        !print *, '*****************************'
+        !print *, 'pmat->', pmat
+        !print *, '*****************************'
+        !print *, 'Ddmat->', Ddmat
+        !print *, '*****************************'
+        !print *, 'Dpmat->', Dpmat
+        !print *, '*****************************'
+        !print *, 'Dmatx->', Dmatx
+        !print *, '*****************************'
 ! Format Statements
 ! ===========================================================================
 ! None
